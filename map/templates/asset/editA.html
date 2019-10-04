@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load custom %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <form method="post" class="card">
+          {% csrf_token %}
+          <div class="card-header">
+            <h3 class="card-title">Edit Asset A</h3>
+          </div>
+          <div class="card-body">
+            <div class="row asset-a-form">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control" disabled value="{{asset.assetId|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset Name</label>
+                  <input type="text" class="form-control" name="asset_name" placeholder="asset name" value="{{asset.asset_name|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+              	<div class="form-group">
+                  <label class="form-label">Start Location</label>
+                  <input type="text" class="form-control" name="start_location" placeholder="start location" value="{{asset.start_location|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+              	<div class="form-group">
+                  <label class="form-label">End Location</label>
+                  <input type="text" class="form-control" name="end_location" placeholder="end location" value="{{asset.end_location|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Length (ft)</label>
+                  <input type="number" class="form-control area-calc length" name="length" placeholder="length" value="{{asset.length}}" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Wide (ft)</label>
+                  <input type="number" class="form-control area-calc wide" name="wide" placeholder="wide" value="{{asset.wide}}" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Area (sqft)</label>
+                  <input type="text" class="form-control area" placeholder="area" 
+                  disabled value="{{asset.length|multiply:asset.wide}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Functional Classification</label>
+                  <select name="func_class" class="form-control">
+                    {% for item in FUNC_CLASS %}
+                    <option value="{{item|get_value:0}}"
+                    {% if item|get_value:0 == asset.func_class %}selected{% endif %}>{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Pavement Surface Type</label>
+                  <select name="pavement_surface" class="form-control">
+                    {% for item in PAVEMENT_SURFACE %}
+                    <option value="{{item|get_value:0}}" {% if item|get_value:0 == asset.pavement_surface %}selected{% endif %}>{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date" name="install_date" value="{{asset.install_date|date:'Y-m-d'}}">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-right">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+    });
+  </script>
+{% endblock %}

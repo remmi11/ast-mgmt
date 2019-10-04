@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load custom %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="toggle-form-group">
+          <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
+          <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
+        </div>
+      </div>
+      <div class="col-12">
+        <form method="post" class="card" id="myform">
+          <input type="hidden" name="asset_type" class="asset-type" value="Asset A" />
+          {% csrf_token %}
+          <div class="card-header">
+            <h3 class="card-title">Create Asset A</h3>
+          </div>
+          <div class="card-body">
+            <div class="row asset-a-form">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control assetId asseta-assetId" name="asset_id_a" placeholder="asset id" 
+                  value="A-{{assetAMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'asseta')">
+                  <div class="invalid-feedback">Asset Id is already existed.</div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset Name</label>
+                  <input type="text" class="form-control" name="asset_name" placeholder="asset name">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+              	<div class="form-group">
+                  <label class="form-label">Start Location</label>
+                  <input type="text" class="form-control" name="start_location" placeholder="start location">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+              	<div class="form-group">
+                  <label class="form-label">End Location</label>
+                  <input type="text" class="form-control" name="end_location" placeholder="end location">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Length (ft)</label>
+                  <input type="number" class="form-control area-calc length" name="length" placeholder="length" value="0" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Wide (ft)</label>
+                  <input type="number" class="form-control area-calc wide" name="wide" placeholder="wide" value="0" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Area (sqft)</label>
+                  <input type="text" class="form-control area" placeholder="area" disabled value="0">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Functional Classification</label>
+                  <select name="func_class" class="form-control">
+                    {% for item in FUNC_CLASS %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Pavement Surface Type</label>
+                  <select name="pavement_surface" class="form-control">
+                    {% for item in PAVEMENT_SURFACE %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date" name="install_date_a" placeholder="area">
+                </div>
+              </div>
+            </div>
+
+            <div class="row asset-b-form" style="display: none;">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control assetId asseta-assetId" name="asset_id_b" placeholder="asset id" 
+                  value="B-{{assetBMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'assetb')">
+                  <div class="invalid-feedback">Asset Id is already existed.</div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <input type="text" class="form-control" name="type" placeholder="type">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Code</label>
+                  <input type="text" class="form-control" name="code" placeholder="code">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Support Structure</label>
+                  <select name="support_structure" class="form-control">
+                    {% for item in SUPPORT_STRUCTURE %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date" name="install_date_b" placeholder="area">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-right">
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    function toggle(obj) {
+      $('.toggle-btn').addClass('toggle-deactive');
+      $(obj).removeClass('toggle-deactive');
+
+      $(".card-title").html("Create " + $(obj).html());
+      $(".asset-type").val($(obj).html());
+
+      if($(obj).html() == "Asset A") {
+        $(".asset-a-form").show();
+        $(".asset-b-form").hide();
+      } else {
+        $(".asset-a-form").hide();
+        $(".asset-b-form").show();
+      }
+    }
+
+    function checkAssetId(obj, type) {
+      $.ajax({
+        method: "post",
+        url: "/api/assetid/"+type+"/",
+        data: {assetId: $(obj).val()}
+      }).done(function (res) {
+        console.log(res);
+        if(res == "True") {
+          $(obj).addClass("is-invalid");
+        } else {
+          $(obj).removeClass("is-invalid");
+        }
+      });
+    }
+
+    $(document).ready(function(){
+      $(".date").datepicker({format: 'yyyy-mm-dd'});
+      $(".date").datepicker("setDate" , new Date());
+
+      $(".area-calc").keyup(function(){
+        $(".area").val((parseFloat($(".length").val()) * parseFloat($(".wide").val())).toFixed(2));
+      });
+      $(".area-calc").change(function(){
+        $(".area").val((parseFloat($(".length").val()) * parseFloat($(".wide").val())).toFixed(2));
+      });
+
+      $('#myform').submit(function() {
+        if ($('.asset-type').val() == "Asset A" &&
+          $(".asseta-assetId").hasClass("is-invalid"))
+          return false;
+        if ($('.asset-type').val() == "Asset B" &&
+          $(".assetb-assetId").hasClass("is-invalid"))
+          return false;
+
+        return true;
+      });
+    });
+</script>
+{% endblock %}

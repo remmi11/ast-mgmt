@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load custom %}
+
+{% block content %}
+<!-- start toggle block: switch asset types -->
+<div class="toggle-btn-group">
+  <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
+  <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
+</div>
+<!-- end toggle block -->
+<div class="map-header">
+  <div class="map-header-layer" id="map-background" style="height: calc(100vh - 350px);"></div>
+  <div class="card form-table">
+    <!-- start asset a table panel -->
+
+    <img class="loading-bar" src="{% static 'loading.gif' %}" style="display: none">
+    <div class="table-responsive asset-a-table">
+      <table class="table card-table table-striped table-vcenter text-nowrap">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Asset Name</th>
+            <th>Start Location</th>
+            <th>End Location</th>
+            <th>Function</th>
+            <th>Pavement Surface</th>
+            <th>Length</th>
+            <th>Wide</th>
+            <th>Area</th>
+            <th>User</th>
+            <th style="width: 50px;">Edit/Review</th>
+          </tr>
+          <tbody class="asset-a-body">
+             
+          </tbody>
+        </thead>
+      </table>
+    </div>
+    <!-- end asset a table panel -->
+    <!-- start asset a table panel -->
+    <div class="table-responsive asset-b-table" style="display: none">
+      <table class="table card-table table-striped table-vcenter text-nowrap">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Code</th>
+            <th>Support Structure</th>
+            <th>User</th>
+            <th style="width: 50px;">Edit/Review</th>
+          </tr>
+          <tbody class="asset-b-body">
+             
+          </tbody>
+        </thead>
+      </table>
+    </div>
+    <!-- end asset a table panel -->
+  </div>
+</div>
+
+<!-- start download data panel -->
+<span class="download-shape" onclick="download()">
+  <i class="fa fa-download" data-toggle="tooltip" title="" data-original-title="download"></i>
+</span>
+<!-- end download data panel -->
+
+<!-- start upload data panel -->
+<span class="upload-shape" onclick="openNavR()">
+  <i class="fa fa-cloud-upload" data-toggle="tooltip" title="" data-original-title="upload shape file"></i>
+</span>
+<!-- end upload data panel -->
+
+<div id="mySidenavR" class="sidenavR">
+    <div class="card search-panel">
+      <div class="card-header">
+        <h3 class="card-title">Layers Panel</h3>
+        <div class="card-options">
+          <label class="custom-switch m-0">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNavR()">×</a>
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="col-md-12 col-lg-12">
+          <div class="form-group">
+            <div class="form-label">Upload ShapeFile</div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="file" accept=".zip">
+              <label class="custom-file-label">Choose file</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary" 
+            onclick="uploadFile()" style="float: right; margin-top: 10px;">
+              Upload
+              <img src="{% static 'loading.gif' %}" class="upload-loading-bar" style="display: none" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="detail-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <form method="post" action="{% url 'form_view' %}">
+    {% csrf_token %}
+    <input type="hidden" name="asset_type" class="asset-type" value="Asset A" />
+    <input type="hidden" name="geometry" class="geometry" value="" />
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Asset</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        </button>
+      </div>
+      <div class="modal-body card-body">
+        <div class="row asset-a-form-body">
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Asset ID</label>
+              <input type="text" class="form-control assetId asseta-assetId" name="asset_id_a" placeholder="asset id" 
+              value="A-{{assetAMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'asseta')">
+              <div class="invalid-feedback">Asset Id is already existed.</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Asset Name</label>
+              <input type="text" class="form-control form-value" name="asset_name" placeholder="asset name">
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Start Location</label>
+              <input type="text" class="form-control form-value" name="start_location" placeholder="start location">
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">End Location</label>
+              <input type="text" class="form-control form-value" name="end_location" placeholder="end location">
+            </div>
+          </div>
+          <div class="col-md-4 col-lg-4">
+            <div class="form-group">
+              <label class="form-label">Length (ft)</label>
+              <input type="number" class="form-control area-calc length" name="length" placeholder="length" value="0" step="0.01">
+            </div>
+          </div>
+          <div class="col-md-4 col-lg-4">
+            <div class="form-group">
+              <label class="form-label">Wide (ft)</label>
+              <input type="number" class="form-control area-calc wide" name="wide" placeholder="wide" value="0" step="0.01">
+            </div>
+          </div>
+          <div class="col-md-4 col-lg-4">
+            <div class="form-group">
+              <label class="form-label">Area (sqft)</label>
+              <input type="text" class="form-control area" placeholder="area" disabled value="0">
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Functional Classification</label>
+              <select name="func_class" class="form-control">
+                {% for item in FUNC_CLASS %}
+                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Pavement Surface Type</label>
+              <select name="pavement_surface" class="form-control">
+                {% for item in PAVEMENT_SURFACE %}
+                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Initial Installation Date</label>
+              <input type="text" class="form-control date" name="install_date_a" placeholder="area">
+            </div>
+          </div>
+        </div>
+
+        <div class="row asset-b-form-body" style="display: none;">
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Asset ID</label>
+              <input type="text" class="form-control assetId asseta-assetId" name="asset_id_b" placeholder="asset id" 
+              value="B-{{assetBMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'assetb')">
+              <div class="invalid-feedback">Asset Id is already existed.</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <input type="text" class="form-control" name="type" placeholder="type">
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Code</label>
+              <input type="text" class="form-control" name="code" placeholder="code">
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Support Structure</label>
+              <select name="support_structure" class="form-control">
+                {% for item in SUPPORT_STRUCTURE %}
+                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-6">
+            <div class="form-group">
+              <label class="form-label">Initial Installation Date</label>
+              <input type="text" class="form-control date" name="install_date_b" placeholder="area">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="cancel()" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+    </form>
+  </div>
+</div>
+
+<link rel='stylesheet' href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="{% static 'js/map.js' %}"></script>
+<script type="text/javascript">
+  var linesLayer = null;
+  var pointLayer = null;
+
+  function openNavR() {
+      document.getElementById("mySidenavR").style.width = "250px";
+  }
+  function closeNavR() {
+      document.getElementById("mySidenavR").style.width = "0";
+  }
+
+  // toggle action to switch between assetA and assetB on data table 
+  function toggle(obj) {
+      $('.toggle-btn').addClass('toggle-deactive');
+      $(obj).removeClass('toggle-deactive');
+
+      $('.asset-type').val($(obj).html());
+
+      if($(obj).html() == "Asset A") {
+        $(".asset-a-table").show();
+        $(".asset-b-table").hide();
+        loadAssetA($('.header-search').val());
+      } else {
+        $(".asset-a-table").hide();
+        $(".asset-b-table").show();
+        loadAssetB($('.header-search').val());
+      }
+  }
+
+  // edit asset
+  function editForm(id, type) {
+    window.location.href = '/form/'+type+'/'+id+'/';
+  }
+
+  // remove asset
+  function removeForm(obj, id, type) {
+    var r = confirm("Do you really remove this asset?");
+    if (r) {
+      var url = '/api/form/'+type+'/'+id+'/';
+      $.ajax({
+        method: "post",
+        url: url
+      }).done(function (assets) {
+        loadGeoJson($(".header-search").val());
+      });
+      $(obj).parent().parent().remove();
+    }
+  }
+
+  // fetch asset B data from server and update data on table
+  function loadAssetB(search="") {
+    $(".loading-bar").show();
+    $(".asset-b-body").html("");
+    $.ajax({
+      method: "post",
+      url: "/api/form/formB/",
+      dataType: "json",
+      data: {search: search}
+    }).done(function (assets) {
+      var body = "";
+
+      for(var i = 0; i < assets.length ; i++){
+        var asset = assets[i];
+        body += "<tr><td style='padding-left: 25px!important;'>" + asset['assetId'] + 
+          "</td><td>" + asset['type'] + 
+          "</td><td>" + asset['code'] + 
+          "</td><td class='text-capitalize'>" + asset['support_structure'] + 
+          "</td><td>" + asset['created_by'] + 
+          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"editb\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removeb\")'></i></td></tr>";
+      }
+      $(".asset-b-body").html(body);
+      $(".loading-bar").hide();
+    });
+  }
+
+  // fetch asset A data from server and update data on table
+  function loadAssetA(search="") {
+    $(".loading-bar").show();
+    $(".asset-a-body").html("");
+    $.ajax({
+      method: "post",
+      url: "/api/form/formA/",
+      dataType: "json",
+      data: {search: search}
+    }).done(function (assets) {
+      var body = "";
+
+      for(var i = 0; i < assets.length ; i++){
+        var asset = assets[i];
+        body += "<tr><td style='padding-left: 25px!important;'>" + asset['assetId'] + 
+          "</td><td>" + asset['asset_name'] + 
+          "</td><td>" + asset['start_location'] + 
+          "</td><td>" + asset['end_location'] + 
+          "</td><td class='text-capitalize'>" + asset['func_class'] + 
+          "</td><td class='text-capitalize'>" + asset['pavement_surface'] + 
+          "</td><td>" + asset['length'] + 
+          "</td><td>" + asset['wide'] + 
+          "</td><td>" + asset['area'] + 
+          "</td><td>" + asset['created_by'] + 
+          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"edita\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removea\")'></i></td></tr>";
+      }
+      $(".asset-a-body").html(body);
+      $(".loading-bar").hide();
+    });
+  }
+
+  // get geojson of polylines and points from the server
+  function loadGeoJson(search="") {
+    drawnItems.clearLayers();
+    if (linesLayer)
+      map.removeLayer(linesLayer);
+    if (pointLayer)
+      map.removeLayer(pointLayer);
+
+    $.ajax({
+      method: "post",
+      url: "/api/geojson/",
+      dataType: "json",
+      data: {search: search}
+    }).done(function (geoJson) {
+
+      if (geoJson['points']['features']) {
+        pointLayer = L.geoJSON(geoJson['points'], {
+          onEachFeature: function(feature, layer) { // show popup, when hovering point
+            layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
+            layer.on('mouseover', function() { layer.openPopup(); });
+            layer.on('mouseout', function() { layer.closePopup(); });
+          },
+        }).addTo(map);
+
+        // zoom map to show all points
+        map.fitBounds(pointLayer.getBounds());
+      } else {
+        pointLayer = null;
+      }
+      if (geoJson['lines']['features']) {
+        linesLayer = L.geoJSON(geoJson['lines'], {
+          onEachFeature: function(feature, layer) { // show popup, when hovering polylines
+            layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
+            layer.on('mouseover', function() { layer.openPopup(); });
+            layer.on('mouseout', function() { layer.closePopup(); });
+          },
+        }).addTo(map);
+
+        // zoom map to show all polylines
+        map.fitBounds(linesLayer.getBounds());
+      } else {
+        linesLayer = null;
+      }
+    });
+  }
+
+  // upload shape files. The shape files must be compressed with zip format
+  function uploadFile() {
+    var formData = new FormData();
+
+    if (!$('#file')[0].files[0])
+      return;
+
+    formData.append('file', $('#file')[0].files[0]);
+
+    $(".upload-loading-bar").show();
+    $.ajax({
+      url : '/api/upload/',
+      type : 'POST',
+      data : formData,
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,  // tell jQuery not to set contentType
+      success : function(data) {
+        $(".upload-loading-bar").hide();
+        loadGeoJson();
+        loadAssetA();
+        loadAssetB();
+      }
+    });
+  }
+
+  // download shape files
+  function download() {
+    window.location.href = "/api/download/?search=" + $(".header-search").val();
+  }
+
+  // cancel create new form with drawn geometry data
+  function cancel() {
+    drawnItems.clearLayers();
+  }
+
+  // after drawing ployline or point on the map, open asset creation form
+  map.on('draw:created', function (e) {
+    var type = e.layerType,
+        layer = e.layer;
+
+    $('#detail-modal').modal('show');
+    $(".form-value").val("");
+    $(".area-calc").val("0");
+    $(".area").val("0");
+    $(".geometry").val(toWKT(e.layer))
+
+    if (type == "marker") {
+      $('.asset-a-form-body').hide();
+      $('.asset-b-form-body').show();
+      $(".asset-type").val('Asset B');
+    } else {
+      $('.asset-a-form-body').show();
+      $('.asset-b-form-body').hide();
+      $(".asset-type").val('Asset A');
+    }
+
+    drawnItems.addLayer(layer);
+  });
+
+  $(document).ready(function(){
+    loadAssetA();
+    loadGeoJson();
+
+    // search bar handler
+    $('.header-search').keypress(function (e) {
+      if (e.which == 13) {
+        if ($('.asset-type').val() == "Asset A") {
+          loadAssetA($(this).val());
+        } else {
+          loadAssetB($(this).val());
+        }
+
+        loadGeoJson($(this).val());
+      }
+    });
+  });
+</script>
+{% endblock %}

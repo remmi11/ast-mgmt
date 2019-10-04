@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load custom %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <form method="post" class="card">
+          {% csrf_token %}
+          <div class="card-header">
+            <h3 class="card-title">Edit Asset B</h3>
+          </div>
+          <div class="card-body">
+            <div class="row asset-b-form">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control" disabled value="{{asset.assetId}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <input type="text" class="form-control" name="type" placeholder="type" value="{{asset.type|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Code</label>
+                  <input type="text" class="form-control" name="code" placeholder="code" value="{{asset.code|default_if_none:''}}">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Support Structure</label>
+                  <select name="support_structure" class="form-control">
+                    {% for item in SUPPORT_STRUCTURE %}
+                    <option value="{{item|get_value:0}}" {% if item|get_value:0 == asset.support_structure %}selected{% endif %}>{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date" name="install_date" value="{{asset.install_date|date:'Y-m-d'}}">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-right">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      $(".date").datepicker({format: 'yyyy-mm-dd'});
+      if($(".date").val() == "")
+        $(".date").datepicker("setDate" , new Date());
+    });
+</script>
+{% endblock %}
