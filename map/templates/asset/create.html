@@ -132,6 +132,7 @@
             </div>
           </div>
           <div class="card-footer text-right">
+            <button type="button" class="btn btn-primary" onclick="onDraw()">Draw</button>
             <button type="submit" class="btn btn-primary">Create</button>
           </div>
         </form>
@@ -169,6 +170,11 @@
           $(obj).removeClass("is-invalid");
         }
       });
+    }
+
+    function onDraw() {
+      $("#myform").attr("action", "{% url 'map_view' %}");
+      $("#myform").submit();
     }
 
     $(document).ready(function(){

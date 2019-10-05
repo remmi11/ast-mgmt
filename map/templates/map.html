@@ -129,19 +129,19 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Asset Name</label>
-              <input type="text" class="form-control form-value" name="asset_name" placeholder="asset name">
+              <input type="text" class="form-control form-value asset-name" name="asset_name" placeholder="asset name">
             </div>
           </div>
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Start Location</label>
-              <input type="text" class="form-control form-value" name="start_location" placeholder="start location">
+              <input type="text" class="form-control form-value start" name="start_location" placeholder="start location">
             </div>
           </div>
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">End Location</label>
-              <input type="text" class="form-control form-value" name="end_location" placeholder="end location">
+              <input type="text" class="form-control form-value end" name="end_location" placeholder="end location">
             </div>
           </div>
           <div class="col-md-4 col-lg-4">
@@ -165,7 +165,7 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Functional Classification</label>
-              <select name="func_class" class="form-control">
+              <select name="func_class" class="form-control function">
                 {% for item in FUNC_CLASS %}
                 <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
                 {% endfor %}
@@ -175,7 +175,7 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Pavement Surface Type</label>
-              <select name="pavement_surface" class="form-control">
+              <select name="pavement_surface" class="form-control pavement">
                 {% for item in PAVEMENT_SURFACE %}
                 <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
                 {% endfor %}
@@ -185,7 +185,7 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Initial Installation Date</label>
-              <input type="text" class="form-control date" name="install_date_a" placeholder="area">
+              <input type="text" class="form-control date init-date-a" name="install_date_a" placeholder="area">
             </div>
           </div>
         </div>
@@ -194,7 +194,7 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Asset ID</label>
-              <input type="text" class="form-control assetId asseta-assetId" name="asset_id_b" placeholder="asset id" 
+              <input type="text" class="form-control assetId assetb-assetId" name="asset_id_b" placeholder="asset id" 
               value="B-{{assetBMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'assetb')">
               <div class="invalid-feedback">Asset Id is already existed.</div>
             </div>
@@ -202,19 +202,19 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Type</label>
-              <input type="text" class="form-control" name="type" placeholder="type">
+              <input type="text" class="form-control form-type" name="type" placeholder="type">
             </div>
           </div>
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Code</label>
-              <input type="text" class="form-control" name="code" placeholder="code">
+              <input type="text" class="form-control asset-code" name="code" placeholder="code">
             </div>
           </div>
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Support Structure</label>
-              <select name="support_structure" class="form-control">
+              <select name="support_structure" class="form-control support">
                 {% for item in SUPPORT_STRUCTURE %}
                 <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
                 {% endfor %}
@@ -224,7 +224,7 @@
           <div class="col-md-6 col-lg-6">
             <div class="form-group">
               <label class="form-label">Initial Installation Date</label>
-              <input type="text" class="form-control date" name="install_date_b" placeholder="area">
+              <input type="text" class="form-control date init-date-b" name="install_date_b" placeholder="area">
             </div>
           </div>
         </div>
@@ -439,6 +439,25 @@
     $(".area").val("0");
     $(".geometry").val(toWKT(e.layer))
 
+    {% if param|get_value:'asset_type' == 'Asset A' %}
+      $(".asseta-assetId").val("{{param|get_value:'asset_id_a'}}");
+      $(".asset-name").val("{{param|get_value:'asset_name'}}");
+      $(".start").val("{{param|get_value:'start_location'}}");
+      $(".end").val("{{param|get_value:'end_location'}}");
+      $(".length").val("{{param|get_value:'length'|default_if_none:'0'}}");
+      $(".wide").val("{{param|get_value:'wide'|default_if_none:'0'}}");
+      $(".function").val("{{param|get_value:'func_class'}}");
+      $(".pavement").val("{{param|get_value:'pavement_surface'}}");
+      $(".init-date-a").val("{{param|get_value:'install_date_a'}}");
+      $(".area").val(parseFloat($(".length").val()) * parseFloat($(".wide").val()));
+    {% elif param|get_value:'asset_type' == 'Asset B' %}
+      $(".assetb-assetId").val("{{param|get_value:'asset_id_b'}}");
+      $(".init-date-b").val("{{param|get_value:'install_date_b'}}");
+      $(".form-type").val("{{param|get_value:'type'}}");
+      $(".asset-code").val("{{param|get_value:'code'}}");
+      $(".support").val("{{param|get_value:'code'}}");
+    {% endif %}
+
     if (type == "marker") {
       $('.asset-a-form-body').hide();
       $('.asset-b-form-body').show();
@@ -468,6 +487,12 @@
         loadGeoJson($(this).val());
       }
     });
+
+    {% if param|get_value:'asset_type' == 'Asset A' %}
+      new L.Draw.Polyline(map, drawControl.options.polyline).enable();
+    {% elif param|get_value:'asset_type' == 'Asset B' %}
+      new L.Draw.Marker(map, drawControl.options.marker).enable();
+    {% endif %}
   });
 </script>
 {% endblock %}

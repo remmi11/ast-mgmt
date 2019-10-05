@@ -84,13 +84,19 @@ def mapView(request):
     assetAList = AssetAForm.objects.all()
     maxA = AssetAForm.objects.all().aggregate(Max('pk'))['pk__max']
     maxB = AssetBForm.objects.all().aggregate(Max('pk'))['pk__max']
+    param = dict()
+
+    if request.POST:
+        param = request.POST.dict()
+        print (param)
 
     return render(request, 'map.html', {
         'assetAList': assetAList, 'FUNC_CLASS': FUNC_CLASS,
         'PAVEMENT_SURFACE': PAVEMENT_SURFACE,
         'SUPPORT_STRUCTURE': SUPPORT_STRUCTURE, 
         'assetAMaxID': '%04d' % maxA if maxA != None else maxA,
-        'assetBMaxID': '%04d' % maxB if maxB != None else maxB
+        'assetBMaxID': '%04d' % maxB if maxB != None else maxB,
+        'param': param
     })
 
 @login_required
@@ -102,9 +108,12 @@ def apiForm(request, type):
     users = CustomUser.objects.filter(company_id=request.user.company_id)
     user_names = {tp.pk:tp.username for tp in users}
 
+    company_condition = Q(created_by__in=user_names.keys()) | \
+            Q(updated_by__in=user_names.keys())
+
     if type == "formA":
         if search_key == "" or search_key == None:
-            assetAList = AssetAForm.objects.filter(created_by__in=user_names.keys()).order_by('assetId')
+            assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')
         else:
             codition = (Q(assetId__icontains=search_key) | \
                 Q(start_location__icontains=search_key) | \
@@ -112,7 +121,8 @@ def apiForm(request, type):
                 Q(asset_name__icontains=search_key) | \
                 Q(func_class__icontains=search_key) | \
                 Q(pavement_surface__icontains=search_key))
-            assetAList = AssetAForm.objects.filter(Q(created_by__in=user_names.keys()) & codition).order_by('assetId')
+            assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')
+
         assetAList = json.loads(serializers.serialize('json', assetAList))
 
         for item in assetAList:
@@ -120,7 +130,10 @@ def apiForm(request, type):
             asset['id'] = item['pk']
 
             asset['user_id'] = asset['created_by']
-            asset['created_by'] = user_names[asset['created_by']]
+            try:
+                asset['created_by'] = user_names[asset['created_by']]
+            except:
+                asset['created_by'] = user_names[asset['updated_by']]
 
             try:
                 asset['area'] = float(asset['length']) * float(asset['wide'])
@@ -133,13 +146,13 @@ def apiForm(request, type):
             temp.append(asset)
     else:
         if search_key == "" or search_key == None:
-            assetBList = AssetBForm.objects.filter(created_by__in=user_names.keys()).order_by('assetId')
+            assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')
         else:
             codition = (Q(assetId__icontains=search_key) | \
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
-            assetBList = AssetBForm.objects.filter(Q(created_by__in=user_names.keys()) & codition).order_by('assetId')
+            assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')
         
         assetBList = json.loads(serializers.serialize('json', assetBList))
 
@@ -147,17 +160,17 @@ def apiForm(request, type):
             asset = item['fields']
             asset['id'] = item['pk']
             asset['user_id'] = asset['created_by']
-            asset['created_by'] = user_names[asset['created_by']]
+            try:
+                asset['created_by'] = user_names[asset['created_by']]
+            except:
+                asset['created_by'] = user_names[asset['updated_by']]
 
             for tp in asset:
                 asset[tp] = "" if asset[tp] == "None" or asset[tp] == None else asset[tp]
 
             temp.append(asset)
 
-    users = [user.pk for user in users]
-    filteredData = [asset for asset in temp if asset['user_id'] in users]
-
-    return HttpResponse(json.dumps(filteredData), content_type='application/json')
+    return HttpResponse(json.dumps(temp), content_type='application/json')
 
 # Controller for form view
 @login_required
@@ -165,7 +178,6 @@ def formView(request):
     if request.method == "POST":
         asset_type = request.POST.get('asset_type')
         geometry = request.POST.get('geometry')
-        print (asset_type)
 
         if asset_type == "Asset A":
             assetA = AssetAForm()
@@ -243,7 +255,6 @@ def formEditB(request, pk):
 
     if request.method == "POST":
         data = request.POST.copy()
-        print (data)
         data['updated_by'] = request.user.pk
 
         form = AssetBDjForm(data, instance=asset)
@@ -292,7 +303,10 @@ def apiGeoJson(request):
     users = CustomUser.objects.filter(company_id=request.user.company_id)
     user_names = {tp.pk:tp.username for tp in users}
 
-    join_field = AssetAForm.objects.filter(Q(created_by__in=user_names.keys())).query
+    company_condition = Q(created_by__in=user_names.keys()) | \
+            Q(updated_by__in=user_names.keys())
+
+    join_field = AssetAForm.objects.filter(company_condition).query
 
     if search_key != None and search_key != "":
         codition = (Q(assetId__icontains=search_key) | \
@@ -301,7 +315,7 @@ def apiGeoJson(request):
             Q(asset_name__icontains=search_key) | \
             Q(func_class__icontains=search_key) | \
             Q(pavement_surface__icontains=search_key))
-        join_field = AssetAForm.objects.filter(Q(created_by__in=user_names.keys()) & codition).query
+        join_field = AssetAForm.objects.filter(company_condition & codition).query
     join_field = str(join_field).split("WHERE")[1].strip()
 
     sql = '''SELECT row_to_json(fc)
@@ -322,14 +336,14 @@ def apiGeoJson(request):
 
         res['lines'] = row[0]
 
-    join_field = AssetBForm.objects.filter(Q(created_by__in=user_names.keys())).query
+    join_field = AssetBForm.objects.filter(company_condition).query
 
     if search_key != None and search_key != "":
         codition = (Q(assetId__icontains=search_key) | \
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
-        join_field = AssetBForm.objects.filter(Q(created_by__in=user_names.keys()) & codition).query
+        join_field = AssetBForm.objects.filter(company_condition & codition).query
     join_field = str(join_field).split("WHERE")[1].strip()
 
     sql = '''SELECT row_to_json(fc)
@@ -383,7 +397,6 @@ def apiFileUpload(request):
     for file in glob.glob("upload/%s/*.shp" % file_name):
         shapefile = osgeo.ogr.Open(file)
 
-    print (shapefile)
     # if there is no shape file, return failed
     if shapefile == None:
         return HttpResponse("Failed")
@@ -441,7 +454,7 @@ def apiFileUpload(request):
                     sql = '''INSERT INTO form_asset_a (%s, "asset_id", "created_by", "created_at", "updated_at", "geom") 
                         VALUES (%s, '%s', '%s', now(), now(), ST_GeometryFromText('%s', 4326))''' % (fields, data, asset_id, request.user.pk, wkt)
                 else:
-                    sql = '''INSERT INTO form_asset_a (%s, "asset_id", "created_by", "created_at", "updated_at", "geom") 
+                    sql = '''INSERT INTO form_asset_a (%s, "asset_id", "created_by", "created_at", "updated_at") 
                         VALUES (%s, '%s', '%s', now(), now())''' % (fields, data, asset_id, request.user.pk)
 
                 with connection.cursor() as cursor:
@@ -487,7 +500,7 @@ def apiFileUpload(request):
                     sql = '''INSERT INTO form_asset_b (%s, "asset_id", "created_by", "created_at", "updated_at", "geom") 
                         VALUES (%s, '%s', '%s', now(), now(), ST_GeometryFromText('%s', 4326))''' % (fields, data, asset_id, request.user.pk, wkt)
                 else:
-                    sql = '''INSERT INTO form_asset_b (%s, "asset_id", "created_by", "created_at", "updated_at", "geom") 
+                    sql = '''INSERT INTO form_asset_b (%s, "asset_id", "created_by", "created_at", "updated_at") 
                         VALUES (%s, '%s', '%s', now(), now())''' % (fields, data, asset_id, request.user.pk)
 
                 with connection.cursor() as cursor:
@@ -505,9 +518,11 @@ def createCsv(file_path, field_names, user_names, models_class, condition):
         writer.writerow(field_names + ['user'])
 
         if condition:
-            items = models_class.objects.filter(Q(created_by__in=user_names.keys()) & condition)
+            items = models_class.objects.filter((Q(created_by__in=user_names.keys()) | \
+                        Q(updated_by__in=user_names.keys())) & condition)
         else:
-            items = models_class.objects.filter(Q(created_by__in=user_names.keys()))
+            items = models_class.objects.filter(Q(created_by__in=user_names.keys()) | \
+                Q(updated_by__in=user_names.keys()))
 
         for obj in items:
             row = [getattr(obj, field) for field in field_names]
@@ -534,6 +549,8 @@ def apiFileDownload(request):
     os.mkdir("upload/%s/asset_b_shp" % file_name)
 
     codition_a, codition_b = None, None
+    company_condition = Q(created_by__in=user_names.keys()) | \
+            Q(updated_by__in=user_names.keys())
 
     # create shape files for asset_a and asset_b
     if search_key != None and search_key != "":
@@ -543,7 +560,7 @@ def apiFileDownload(request):
             Q(asset_name__icontains=search_key) | \
             Q(func_class__icontains=search_key) | \
             Q(pavement_surface__icontains=search_key))
-        search_field = AssetAForm.objects.filter(Q(created_by__in=user_names.keys()) & codition_a).query
+        search_field = AssetAForm.objects.filter(company_condition & codition_a).query
         search_field = str(search_field).split("WHERE")[1].strip()
         search_field = search_field.replace("LIKE UPPER(", "LIKE UPPER('").replace("(%", "('%").replace("%)", "%')")
         os.system('ogr2ogr -f "ESRI Shapefile" upload/%s/asset_a_shp/asset_a.shp %s "form_asset_a" -where "%s"' % (file_name, connection_string, search_field))
@@ -552,7 +569,7 @@ def apiFileDownload(request):
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
-        search_field = AssetBForm.objects.filter(Q(created_by__in=user_names.keys()) & codition_b).query
+        search_field = AssetBForm.objects.filter(company_condition & codition_b).query
         search_field = str(search_field).split("WHERE")[1].strip()
         search_field = search_field.replace("LIKE UPPER(", "LIKE UPPER('").replace("(%", "('%").replace("%)", "%')")
         os.system('ogr2ogr -f "ESRI Shapefile" upload/%s/asset_b_shp/asset_b.shp %s "form_asset_b" -where "%s"' % (file_name, connection_string, search_field))
