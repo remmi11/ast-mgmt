@@ -25,7 +25,7 @@ SECRET_KEY = '4H1EFLJMSAy6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'ast-mgmt.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'ast-mgmt.herokuapp.com', '18.220.243.221']
 
 SITE_ID = 1
 
