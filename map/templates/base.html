@@ -32,7 +32,7 @@
         <div class="header py-4">
           <div class="container">
             <div class="d-flex">
-              <a class="header-brand" href="./index.html">
+              <a class="header-brand" href="{% url 'map_view' %}">
                 <h2 class="logo-title">My App</h2>
               </a>
               <div class="d-flex order-lg-2 ml-auto">
@@ -59,12 +59,19 @@
         <div class="header menu-header collapse d-lg-flex p-0" id="headerMenuCollapse">
           <div class="container">
           	<div class="row align-items-center">
-              <div class="col-lg-3 ml-auto">
+              <div class="col-lg-6 ml-auto">
                 {% if '/map/' in request.path %}
-                <div class="input-icon my-3 my-lg-0">
-                  <input type="search" class="form-control header-search" placeholder="Search&hellip;" tabindex="1" style="margin: 5px;">
-                  <div class="input-icon-addon">
-                    <i class="fe fe-search"></i>
+
+                <div class = row>
+                  <div class="input-icon my-3 my-lg-3">
+                    <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
+                    <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
+                  </div>
+                  <div class="input-icon my-3 my-lg-0" style="margin-left: 10%;">
+                    <input type="search" class="form-control header-search" placeholder="Search&hellip;" tabindex="1" style="margin: 5px;">
+                    <div class="input-icon-addon">
+                      <i class="fe fe-search"></i>
+                    </div>
                   </div>
                 </div>
                 {% endif %}
