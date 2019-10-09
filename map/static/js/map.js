@@ -16,7 +16,7 @@ function toWKT(layer) {
             return "LINESTRING (" + coords.join(",") + ")";
         }
     } else if (layer instanceof L.Marker) {
-        return "MULTIPOINT (" + layer.getLatLng().lng + " " + layer.getLatLng().lat + ")";
+        return "POINT (" + layer.getLatLng().lng + " " + layer.getLatLng().lat + ")";
     }
 }
 
