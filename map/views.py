@@ -526,7 +526,11 @@ def createCsv(file_path, field_names, user_names, models_class, condition):
 
         for obj in items:
             row = [getattr(obj, field) for field in field_names]
-            row.append(user_names[obj.created_by])
+
+            try:
+                row.append(user_names[obj.created_by])
+            except:
+                row.append(user_names[obj.updated_by])
 
             writer.writerow(row)
 
