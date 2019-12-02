@@ -14,7 +14,7 @@ from django.db.models import Q
 import json
 import zipfile
 import osgeo.ogr
-from datetime import date
+from datetime import date, datetime, timedelta
 import uuid
 import glob
 import os
@@ -43,6 +43,8 @@ SUPPORT_STRUCTURE = [
     ['metal', 'Metal'],
     ['concrete', 'Concrete']
 ]
+
+PAGE_SIZE = 10
 
 # Controller for registering new user
 def register(request):
@@ -103,6 +105,8 @@ def mapView(request):
 @csrf_exempt
 def apiForm(request, type):
     search_key = request.POST.get('search')
+    page = int(request.POST.get('page', 1))
+    load_all = int(request.POST.get('loadAll', 0))
 
     temp = []
     users = CustomUser.objects.filter(company_id=request.user.company_id)
@@ -113,7 +117,10 @@ def apiForm(request, type):
 
     if type == "formA":
         if search_key == "" or search_key == None:
-            assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')
+            if load_all == 1:
+                assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')[:page * PAGE_SIZE]
+            else:
+                assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
         else:
             codition = (Q(assetId__icontains=search_key) | \
                 Q(start_location__icontains=search_key) | \
@@ -121,7 +128,11 @@ def apiForm(request, type):
                 Q(asset_name__icontains=search_key) | \
                 Q(func_class__icontains=search_key) | \
                 Q(pavement_surface__icontains=search_key))
-            assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')
+
+            if load_all == 1:
+                assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')[:page * PAGE_SIZE]
+            else:
+                assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
 
         assetAList = json.loads(serializers.serialize('json', assetAList))
 
@@ -146,13 +157,20 @@ def apiForm(request, type):
             temp.append(asset)
     else:
         if search_key == "" or search_key == None:
-            assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')
+            if load_all == 1:
+                assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')[:page * PAGE_SIZE]
+            else:
+                assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
         else:
             codition = (Q(assetId__icontains=search_key) | \
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
-            assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')
+
+            if load_all == 1:
+                assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')[:page * PAGE_SIZE]
+            else:
+                assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]            
         
         assetBList = json.loads(serializers.serialize('json', assetBList))
 
@@ -299,24 +317,53 @@ def apiCheckAssetId(request, type):
 def apiGeoJson(request):
     res = dict()
     search_key = request.POST.get('search')
+    page_a = int(request.POST.get('pageA', 1))
+    page_b = int(request.POST.get('pageB', 1))
+
+    filters = dict()
+    params = json.loads(request.POST.get('filter'))
+    for param in params:
+        if param['name'] in ['asset_type', 'recent', 'pavement', 'structure', 'function']:
+            if param['name'] not in filters.keys():
+                filters[param['name']] = []
+            filters[param['name']].append(param['value'])
+        else:
+            filters[param['name']] = param['value']
 
     users = CustomUser.objects.filter(company_id=request.user.company_id)
     user_names = {tp.pk:tp.username for tp in users}
 
     company_condition = Q(created_by__in=user_names.keys()) | \
             Q(updated_by__in=user_names.keys())
-
-    join_field = AssetAForm.objects.filter(company_condition).query
+    condition = company_condition
 
     if search_key != None and search_key != "":
-        codition = (Q(assetId__icontains=search_key) | \
+        temp = (Q(assetId__icontains=search_key) | \
             Q(start_location__icontains=search_key) | \
             Q(end_location__icontains=search_key) | \
             Q(asset_name__icontains=search_key) | \
             Q(func_class__icontains=search_key) | \
             Q(pavement_surface__icontains=search_key))
-        join_field = AssetAForm.objects.filter(company_condition & codition).query
+        condition = condition & temp
+    
+    if 'recent' in filters:
+        created, updated = None, None
+        if 'created' in filters['recent']:
+            created = Q(created_at__gte=date.today()-timedelta(days=7))
+        if 'updated' in filters['recent']:
+            updated = Q(updated_at__gte=date.today()-timedelta(days=7))
+
+        if created and updated:
+            condition = condition & (created | updated)
+        elif created:
+            condition = condition & created
+        elif updated:
+            condition = condition & updated
+
+    join_field = AssetAForm.objects.filter(condition)[(page_a-1) * PAGE_SIZE: page_a * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
+    join_field = join_field.replace('at" >= ', 'at" >= \'').replace('00:00:00+00:00', '00:00:00+00:00\'')
+    print (join_field)
 
     sql = '''SELECT row_to_json(fc)
         FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features
@@ -336,14 +383,14 @@ def apiGeoJson(request):
 
         res['lines'] = row[0]
 
-    join_field = AssetBForm.objects.filter(company_condition).query
+    join_field = AssetBForm.objects.filter(company_condition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
 
     if search_key != None and search_key != "":
         codition = (Q(assetId__icontains=search_key) | \
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
-        join_field = AssetBForm.objects.filter(company_condition & codition).query
+        join_field = AssetBForm.objects.filter(company_condition & codition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
 
     sql = '''SELECT row_to_json(fc)
@@ -363,6 +410,12 @@ def apiGeoJson(request):
         row = cursor.fetchone()
 
         res['points'] = row[0]
+
+    if 'asset_type' in filters:
+        if 'assetA' not in filters['asset_type']:
+            res['lines'] = []
+        if 'assetB' not in filters['asset_type']:
+            res['points'] = []
 
     return HttpResponse(json.dumps(res), content_type='application/json')
 

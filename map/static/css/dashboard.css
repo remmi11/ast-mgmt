@@ -16715,8 +16715,8 @@ svg {
   font-size: 30px;
   cursor: pointer;
   position: absolute;
-  left: 10px;
-  bottom: 230px;
+  right: 12px;
+  top: 25px;
   z-index: 1000;
   color: #0c0c73;
 }
@@ -16725,8 +16725,8 @@ svg {
   font-size: 30px;
   cursor: pointer;
   position: absolute;
-  right: 25px;
-  top: 125px;
+  right: 10px;
+  top: -10px;
   z-index: 1000;
   color: #0c0c73;
 }
@@ -16760,7 +16760,7 @@ svg {
   z-index: 1001;
 }
 .form-table .table-responsive {
-  height: 182px;
+  height: 192px;
 }
 .form-table td {
   padding: 0.25em 0.75em !important;
@@ -16796,11 +16796,17 @@ svg {
   cursor: pointer;
 }
 .form-table .loading-bar {
-  max-width: 40px;
+  max-width: 25px;
   position: absolute;
   margin-left: 48%;
   bottom: 66px;
 }
 .upload-loading-bar {
   width: 20px;
+}
+.filter-card {
+  margin: 0px;
+}
+.filter-card .form-label {
+  border-bottom: 1px solid #868686;
 }

@@ -4,241 +4,438 @@
 
 {% block content %}
 <!-- end toggle block -->
-<div class="map-header">
-  <div class="map-header-layer" id="map-background" style="height: calc(100vh - 350px);"></div>
-  <div class="card form-table">
-    <!-- start asset a table panel -->
-
-    <img class="loading-bar" src="{% static 'loading.gif' %}" style="display: none">
-    <div class="table-responsive asset-a-table">
-      <table class="table card-table table-striped table-vcenter text-nowrap">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Asset Name</th>
-            <th>Start Location</th>
-            <th>End Location</th>
-            <th>Function</th>
-            <th>Pavement Surface</th>
-            <th>Length</th>
-            <th>Wide</th>
-            <th>Area</th>
-            <th>User</th>
-            <th style="width: 50px;">Edit/Review</th>
-          </tr>
-          <tbody class="asset-a-body">
-             
-          </tbody>
-        </thead>
-      </table>
-    </div>
-    <!-- end asset a table panel -->
-    <!-- start asset a table panel -->
-    <div class="table-responsive asset-b-table" style="display: none">
-      <table class="table card-table table-striped table-vcenter text-nowrap">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Code</th>
-            <th>Support Structure</th>
-            <th>User</th>
-            <th style="width: 50px;">Edit/Review</th>
-          </tr>
-          <tbody class="asset-b-body">
-             
-          </tbody>
-        </thead>
-      </table>
-    </div>
-    <!-- end asset a table panel -->
-  </div>
-</div>
-
-<!-- start download data panel -->
-<span class="download-shape" onclick="download()">
-  <i class="fa fa-download" data-toggle="tooltip" title="" data-original-title="download"></i>
-</span>
-<!-- end download data panel -->
-
-<!-- start upload data panel -->
-<span class="upload-shape" onclick="openNavR()">
-  <i class="fa fa-cloud-upload" data-toggle="tooltip" title="" data-original-title="upload shape file"></i>
-</span>
-<!-- end upload data panel -->
-
-<div id="mySidenavR" class="sidenavR">
-    <div class="card search-panel">
+<div class="row" style="margin: 0px">
+  <div class="col-lg-3" style="margin-top: -24px; padding: 0px;">
+    <div class="card filter-card" style="">
       <div class="card-header">
-        <h3 class="card-title">Layers Panel</h3>
-        <div class="card-options">
-          <label class="custom-switch m-0">
-            <a href="javascript:void(0)" class="closebtn" onclick="closeNavR()">×</a>
-          </label>
-        </div>
+        <h3 class="card-title">Advanced Filter</h3>
+        <button class="btn btn-primary apply-filter" style="position: absolute; right: 22px;">Apply</button>
+        <button class="btn btn-secondary clear-filter" style="position: absolute; right: 92px;">Clear</button>
       </div>
-      <div class="card-body">
-        <div class="col-md-12 col-lg-12">
-          <div class="form-group">
-            <div class="form-label">Upload ShapeFile</div>
-            <div class="custom-file">
-              <input type="file" class="custom-file-input" id="file" accept=".zip">
-              <label class="custom-file-label">Choose file</label>
+      <div class="card-body" style="height: calc(100vh - 215px);
+        overflow-y: auto;
+        overflow-x: hidden;">
+        <form name="filters" class="filters">
+        <div class="form-group">
+          <label class="form-label">Asset Type</label>
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="asset_type" value="assetA">
+                <span class="custom-control-label">Asset A</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="asset_type" value="assetB">
+                <span class="custom-control-label">Asset B</span>
+              </label>
             </div>
           </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" 
-            onclick="uploadFile()" style="float: right; margin-top: 10px;">
-              Upload
-              <img src="{% static 'loading.gif' %}" class="upload-loading-bar" style="display: none" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recently Updated (Last 7 days)</label>
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="recent" value="created">
+                <span class="custom-control-label">Created</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="recent" value="updated">
+                <span class="custom-control-label">Updated</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dates</label>
+          <div class="row">
+            <div class="col-lg-4" style="padding-top: 8px">
+              <label>Install Date:</label>
+            </div>
+            <div class="col-lg-8">
+              <input type="text" name="install" class="form-control daterange filter-input">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-4">
+              <label>Last Update Date:</label>
+            </div>
+            <div class="col-lg-8">
+              <input type="text" name="update" class="form-control daterange filter-input">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pavement Surface Type</label>
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="pavement" value="asphalt">
+                <span class="custom-control-label">Asphalt</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="pavement" value="pcc">
+                <span class="custom-control-label">PCC</span>
+              </label>
+            </div>
+            <div class="col-lg-12">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="pavement" value="surface_treatment">
+                <span class="custom-control-label">Surface Treatment</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="pavement" value="gravel">
+                <span class="custom-control-label">Gravel</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="pavement" value="brick">
+                <span class="custom-control-label">Brick</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Support Structure Type</label>
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="structure" value="wood">
+                <span class="custom-control-label">Wood</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="structure" value="metal">
+                <span class="custom-control-label">Metal</span>
+              </label>
+            </div>
+            <div class="col-lg-12">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="structure" value="concrete">
+                <span class="custom-control-label">Concrete</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Function Classification</label>
+          <div class="row">
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="function" value="highways">
+                <span class="custom-control-label">Highways</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="function" value="arterial">
+                <span class="custom-control-label">Arterial</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="function" value="collector">
+                <span class="custom-control-label">Collector</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="function" value="residential">
+                <span class="custom-control-label">Residential</span>
+              </label>
+            </div>
+            <div class="col-lg-6">
+              <label class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" name="function" value="rural">
+                <span class="custom-control-label">Rural</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Function Classification</label>
+          <div class="row">
+            <div class="col-lg-5" style="padding-top: 8px">
+              <label>Free Text Search:</label>
+            </div>
+            <div class="col-lg-7">
+              <input type="text" name="function_text" class="form-control filter-input">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <div class="row">
+            <div class="col-lg-5" style="padding-top: 8px">
+              <label>Start Location:</label>
+            </div>
+            <div class="col-lg-7">
+              <input type="text" name="start" class="form-control filter-input">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-5" style="padding-top: 8px">
+              <label>End Location:</label>
+            </div>
+            <div class="col-lg-7">
+              <input type="text" name="end" class="form-control filter-input">
+            </div>
+          </div>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-9" style="padding: 0px">
+    <div class="map-header">
+      <div class="map-header-layer" id="map-background" style="height: calc(100vh - 350px);"></div>
+      <div class="card form-table">
+        <!-- start asset a table panel -->
+
+        <img class="loading-bar" src="{% static 'loading.gif' %}" style="display: none">
+        <div class="table-responsive asset-a-table">
+          <table class="table card-table table-striped table-vcenter text-nowrap">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Asset Name</th>
+                <th>Start Location</th>
+                <th>End Location</th>
+                <th>Function</th>
+                <th>Pavement Surface</th>
+                <th>Length</th>
+                <th>Wide</th>
+                <th>Area</th>
+                <th>User</th>
+                <th style="width: 50px;">Edit/Review</th>
+              </tr>
+              <tbody class="asset-a-body">
+                 
+              </tbody>
+            </thead>
+          </table>
+        </div>
+        <!-- end asset a table panel -->
+        <!-- start asset a table panel -->
+        <div class="table-responsive asset-b-table" style="display: none">
+          <table class="table card-table table-striped table-vcenter text-nowrap">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Code</th>
+                <th>Support Structure</th>
+                <th>User</th>
+                <th style="width: 50px;">Edit/Review</th>
+              </tr>
+              <tbody class="asset-b-body">
+                 
+              </tbody>
+            </thead>
+          </table>
+        </div>
+        <!-- end asset a table panel -->
+      </div>
+    </div>
+
+    <!-- start download data panel -->
+    <span class="download-shape" onclick="download()">
+      <i class="fa fa-download" data-toggle="tooltip" title="" data-original-title="download"></i>
+    </span>
+    <!-- end download data panel -->
+
+    <!-- start upload data panel -->
+    <span class="upload-shape" onclick="openNavR()">
+      <i class="fa fa-cloud-upload" data-toggle="tooltip" title="" data-original-title="upload shape file"></i>
+    </span>
+    <!-- end upload data panel -->
+
+    <div id="mySidenavR" class="sidenavR">
+        <div class="card search-panel">
+          <div class="card-header">
+            <h3 class="card-title">Layers Panel</h3>
+            <div class="card-options">
+              <label class="custom-switch m-0">
+                <a href="javascript:void(0)" class="closebtn" onclick="closeNavR()">×</a>
+              </label>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="col-md-12 col-lg-12">
+              <div class="form-group">
+                <div class="form-label">Upload ShapeFile</div>
+                <div class="custom-file">
+                  <input type="file" class="custom-file-input" id="file" accept=".zip">
+                  <label class="custom-file-label">Choose file</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary" 
+                onclick="uploadFile()" style="float: right; margin-top: 10px;">
+                  Upload
+                  <img src="{% static 'loading.gif' %}" class="upload-loading-bar" style="display: none" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="detail-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <form method="post" action="{% url 'form_view' %}">
+        {% csrf_token %}
+        <input type="hidden" name="asset_type" class="asset-type" value="Asset A" />
+        <input type="hidden" name="geometry" class="geometry" value="" />
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Create Asset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             </button>
           </div>
+          <div class="modal-body card-body">
+            <div class="row asset-a-form-body">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control assetId asseta-assetId" name="asset_id_a" placeholder="asset id" 
+                  value="A-{{assetAMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'asseta')">
+                  <div class="invalid-feedback">Asset Id is already existed.</div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset Name</label>
+                  <input type="text" class="form-control form-value asset-name" name="asset_name" placeholder="asset name">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Start Location</label>
+                  <input type="text" class="form-control form-value start" name="start_location" placeholder="start location">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">End Location</label>
+                  <input type="text" class="form-control form-value end" name="end_location" placeholder="end location">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Length (ft)</label>
+                  <input type="number" class="form-control area-calc length" name="length" placeholder="length" value="0" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Wide (ft)</label>
+                  <input type="number" class="form-control area-calc wide" name="wide" placeholder="wide" value="0" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="form-group">
+                  <label class="form-label">Area (sqft)</label>
+                  <input type="text" class="form-control area" placeholder="area" disabled value="0">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Functional Classification</label>
+                  <select name="func_class" class="form-control function">
+                    {% for item in FUNC_CLASS %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Pavement Surface Type</label>
+                  <select name="pavement_surface" class="form-control pavement">
+                    {% for item in PAVEMENT_SURFACE %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date init-date-a" name="install_date_a" placeholder="area">
+                </div>
+              </div>
+            </div>
+
+            <div class="row asset-b-form-body" style="display: none;">
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Asset ID</label>
+                  <input type="text" class="form-control assetId assetb-assetId" name="asset_id_b" placeholder="asset id" 
+                  value="B-{{assetBMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'assetb')">
+                  <div class="invalid-feedback">Asset Id is already existed.</div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <input type="text" class="form-control form-type" name="type" placeholder="type">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Code</label>
+                  <input type="text" class="form-control asset-code" name="code" placeholder="code">
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Support Structure</label>
+                  <select name="support_structure" class="form-control support">
+                    {% for item in SUPPORT_STRUCTURE %}
+                    <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="form-group">
+                  <label class="form-label">Initial Installation Date</label>
+                  <input type="text" class="form-control date init-date-b" name="install_date_b" placeholder="area">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cancel()" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
         </div>
+        </form>
       </div>
     </div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="detail-modal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <form method="post" action="{% url 'form_view' %}">
-    {% csrf_token %}
-    <input type="hidden" name="asset_type" class="asset-type" value="Asset A" />
-    <input type="hidden" name="geometry" class="geometry" value="" />
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Create Asset</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        </button>
-      </div>
-      <div class="modal-body card-body">
-        <div class="row asset-a-form-body">
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Asset ID</label>
-              <input type="text" class="form-control assetId asseta-assetId" name="asset_id_a" placeholder="asset id" 
-              value="A-{{assetAMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'asseta')">
-              <div class="invalid-feedback">Asset Id is already existed.</div>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Asset Name</label>
-              <input type="text" class="form-control form-value asset-name" name="asset_name" placeholder="asset name">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Start Location</label>
-              <input type="text" class="form-control form-value start" name="start_location" placeholder="start location">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">End Location</label>
-              <input type="text" class="form-control form-value end" name="end_location" placeholder="end location">
-            </div>
-          </div>
-          <div class="col-md-4 col-lg-4">
-            <div class="form-group">
-              <label class="form-label">Length (ft)</label>
-              <input type="number" class="form-control area-calc length" name="length" placeholder="length" value="0" step="0.01">
-            </div>
-          </div>
-          <div class="col-md-4 col-lg-4">
-            <div class="form-group">
-              <label class="form-label">Wide (ft)</label>
-              <input type="number" class="form-control area-calc wide" name="wide" placeholder="wide" value="0" step="0.01">
-            </div>
-          </div>
-          <div class="col-md-4 col-lg-4">
-            <div class="form-group">
-              <label class="form-label">Area (sqft)</label>
-              <input type="text" class="form-control area" placeholder="area" disabled value="0">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Functional Classification</label>
-              <select name="func_class" class="form-control function">
-                {% for item in FUNC_CLASS %}
-                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Pavement Surface Type</label>
-              <select name="pavement_surface" class="form-control pavement">
-                {% for item in PAVEMENT_SURFACE %}
-                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Initial Installation Date</label>
-              <input type="text" class="form-control date init-date-a" name="install_date_a" placeholder="area">
-            </div>
-          </div>
-        </div>
-
-        <div class="row asset-b-form-body" style="display: none;">
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Asset ID</label>
-              <input type="text" class="form-control assetId assetb-assetId" name="asset_id_b" placeholder="asset id" 
-              value="B-{{assetBMaxID|default_if_none:'0001'}}" required onblur="checkAssetId(this, 'assetb')">
-              <div class="invalid-feedback">Asset Id is already existed.</div>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Type</label>
-              <input type="text" class="form-control form-type" name="type" placeholder="type">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Code</label>
-              <input type="text" class="form-control asset-code" name="code" placeholder="code">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Support Structure</label>
-              <select name="support_structure" class="form-control support">
-                {% for item in SUPPORT_STRUCTURE %}
-                <option value="{{item|get_value:0}}">{{item|get_value:1}}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-6">
-            <div class="form-group">
-              <label class="form-label">Initial Installation Date</label>
-              <input type="text" class="form-control date init-date-b" name="install_date_b" placeholder="area">
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="cancel()" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Create</button>
-      </div>
-    </div>
-    </form>
   </div>
 </div>
-
 <link rel='stylesheet' href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="{% static 'js/map.js' %}"></script>
 <script type="text/javascript">
   var linesLayer = null;
   var pointLayer = null;
+  var pageA = 1, pageB = 1;
+  var lineLayers = [], pointLayers = [];
 
   function openNavR() {
       document.getElementById("mySidenavR").style.width = "250px";
@@ -257,11 +454,11 @@
       if($(obj).html() == "Asset A") {
         $(".asset-a-table").show();
         $(".asset-b-table").hide();
-        loadAssetA($('.header-search').val());
+        loadAssetA($('.header-search').val(), 1);
       } else {
         $(".asset-a-table").hide();
         $(".asset-b-table").show();
-        loadAssetB($('.header-search').val());
+        loadAssetB($('.header-search').val(), 1);
       }
   }
 
@@ -286,14 +483,15 @@
   }
 
   // fetch asset B data from server and update data on table
-  function loadAssetB(search="") {
+  function loadAssetB(search="", refresh = 0) {
     $(".loading-bar").show();
-    $(".asset-b-body").html("");
+    if (refresh == 1)
+      $(".asset-b-body").html("");
     $.ajax({
       method: "post",
       url: "/api/form/formB/",
       dataType: "json",
-      data: {search: search}
+      data: {search: search, page: pageB, loadAll: refresh}
     }).done(function (assets) {
       var body = "";
 
@@ -306,20 +504,29 @@
           "</td><td>" + asset['created_by'] + 
           "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"editb\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removeb\")'></i></td></tr>";
       }
-      $(".asset-b-body").html(body);
+
+      if (refresh == 1) {
+        $(".asset-b-body").html(body);
+      } else {
+        var temp = $(".asset-b-body").html();
+        $(".asset-b-body").html(temp + body);
+      }
       $(".loading-bar").hide();
     });
   }
 
   // fetch asset A data from server and update data on table
-  function loadAssetA(search="") {
+  function loadAssetA(search="", refresh=0) {
     $(".loading-bar").show();
-    $(".asset-a-body").html("");
+
+    if (refresh == 1)
+      $(".asset-a-body").html("");
+
     $.ajax({
       method: "post",
       url: "/api/form/formA/",
       dataType: "json",
-      data: {search: search}
+      data: {search: search, page: pageA, loadAll: refresh}
     }).done(function (assets) {
       var body = "";
 
@@ -337,27 +544,40 @@
           "</td><td>" + asset['created_by'] + 
           "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"edita\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removea\")'></i></td></tr>";
       }
-      $(".asset-a-body").html(body);
+
+      if (refresh == 1) {
+        $(".asset-a-body").html(body);
+      } else {
+        var temp = $(".asset-a-body").html();
+        $(".asset-a-body").html(temp + body);
+      }
       $(".loading-bar").hide();
     });
   }
 
   // get geojson of polylines and points from the server
-  function loadGeoJson(search="") {
-    drawnItems.clearLayers();
-    if (linesLayer)
-      map.removeLayer(linesLayer);
-    if (pointLayer)
-      map.removeLayer(pointLayer);
+  function loadGeoJson(search="", refresh = 1, assetType = "all") {
+    if (refresh == 1) {
+      drawnItems.clearLayers();
+
+      $.each( lineLayers, function( index, layer ) {
+        map.removeLayer(layer);
+      });
+      $.each( pointLayers, function( index, layer ) {
+        map.removeLayer(layer);
+      });
+      lineLayers = [];
+      pointLayers = [];
+    }
 
     $.ajax({
       method: "post",
       url: "/api/geojson/",
       dataType: "json",
-      data: {search: search}
+      data: {search: search, pageA: pageA, pageB: pageB, filter: JSON.stringify($(".filters").serializeArray())}
     }).done(function (geoJson) {
 
-      if (geoJson['points']['features']) {
+      if (geoJson['points']['features'] && (assetType == "all" || assetType == "assetB")) {
         pointLayer = L.geoJSON(geoJson['points'], {
           onEachFeature: function(feature, layer) { // show popup, when hovering point
             layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
@@ -368,10 +588,11 @@
 
         // zoom map to show all points
         map.fitBounds(pointLayer.getBounds());
+        pointLayers.push(pointLayer);
       } else {
         pointLayer = null;
       }
-      if (geoJson['lines']['features']) {
+      if (geoJson['lines']['features'] && (assetType == "all" || assetType == "assetA")) {
         linesLayer = L.geoJSON(geoJson['lines'], {
           onEachFeature: function(feature, layer) { // show popup, when hovering polylines
             layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
@@ -382,6 +603,7 @@
 
         // zoom map to show all polylines
         map.fitBounds(linesLayer.getBounds());
+        lineLayers.push(linesLayer);
       } else {
         linesLayer = null;
       }
@@ -406,9 +628,13 @@
       contentType: false,  // tell jQuery not to set contentType
       success : function(data) {
         $(".upload-loading-bar").hide();
+
+        pageA = 1;
+        pageB = 1;
+
         loadGeoJson();
-        loadAssetA();
-        loadAssetB();
+        loadAssetA("", 1);
+        loadAssetB("", 1);
       }
     });
   }
@@ -467,16 +693,20 @@
   });
 
   $(document).ready(function(){
-    loadAssetA();
+    loadAssetA("", 1);
     loadGeoJson();
 
     // search bar handler
     $('.header-search').keypress(function (e) {
       if (e.which == 13) {
+        pageA = 1;
+        pageB = 1;
+
         if ($('.asset-type').val() == "Asset A") {
-          loadAssetA($(this).val());
+          console.log($(this).val())
+          loadAssetA($(this).val(), 1);
         } else {
-          loadAssetB($(this).val());
+          loadAssetB($(this).val(), 1);
         }
 
         loadGeoJson($(this).val());
@@ -488,6 +718,37 @@
     {% elif param|get_value:'asset_type' == 'Asset B' %}
       new L.Draw.Marker(map, drawControl.options.marker).enable();
     {% endif %}
+
+    $('.asset-a-table').on('scroll', function() {
+      if($(this).scrollTop() + $(this).innerHeight() + 10 >= $(this)[0].scrollHeight) {
+        console.log("loading ...");
+        pageA += 1;
+        loadAssetA($('.header-search').val());
+        loadGeoJson($('.header-search').val(), 0, "assetA");
+      }
+    });
+    $('.asset-b-table').on('scroll', function() {
+      if($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight) {
+        pageB += 1;
+        loadAssetB($('.header-search').val());
+        loadGeoJson($('.header-search').val(), 0, "assetB");
+      }
+    });
+
+    $(".daterange").daterangepicker({
+      locale: {
+        cancelLabel: 'Clear'
+      }
+    });
+    $(".filter-input").val("");
+
+    $(".apply-filter").click(function(){
+      loadGeoJson($(this).val());
+    });
+    $(".clear-filter").click(function(){
+      $("input:checkbox").prop('checked', false);
+      $(".filter-input").val("");
+    });
   });
 </script>
 {% endblock %}
