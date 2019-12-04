@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load custom %}
+
+{% block content %}
+<div class="container">
+  <img src="{% static 'loading.gif' %}" class="inspection-loading-bar" style="display: none" />
+    <div class="row">
+      <div class="col-12">
+        <div class="toggle-form-group">
+          <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
+          <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
+        </div>
+      </div>
+      <div class="col-12">
+        <form method="post" class="card" id="myform">
+          <input type="hidden" name="asset_type" class="asset-type" value="assetA" />
+          <input type="hidden" name="assetId" class="asset-id" />
+          {% csrf_token %}
+          <div class="card-header">
+            <h3 class="card-title">Inspection</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-7 form-panel">
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select class="form-control status" name="status">
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Inspector</label>
+                  <input type="text" class="form-control inspector" name="inspector" placeholder="Inspector" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Inspection Date</label>
+                  <input type="text" class="form-control date inspection_date" name="inspection_date" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">OCI</label>
+                  <input type="number" class="form-control oci" name="oci" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Notes</label>
+                  <textarea class="form-control notes" name="notes"></textarea>
+                </div>
+                <div class="form-group">
+                  <button class="form-control btn btn-primary btn-submit" style="width: 30%">Create</button>
+                </div>
+              </div>
+              <div class="col-5 chart-panel">
+                
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Inspections</h3>
+          </div>
+          <div class="table-responsive" style="padding: 20px">
+            
+          </div>
+        </div>
+       </div>
+    </div>
+</div>
+
+<script src="http://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="http://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css" rel="stylesheet"/>
+<script type="text/javascript">
+  var status_values = {
+    'in-progress': 'In Progress',
+    'completed': 'Completed'
+  }
+
+  function fillData(pk) {
+    var inspection = JSON.parse($(".ins-"+pk).attr('value'));
+
+    $(".status").val(inspection['status']);
+    $(".inspector").val(inspection['inspector']);
+    $(".inspection_date").val(inspection['inspection_date'].split("T")[0]);
+    $(".oci").val(inspection['oci']);
+    $(".notes").val(inspection['notes']);
+    $(".asset-id").val(pk);
+
+    $(".btn-submit").html("Edit");
+  }
+
+  function renderTable(data) {
+    var body = '<table class="table card-table table-vcenter text-nowrap inspection-table"> \
+        <thead> <tr> <th>Status</th> <th>Inspector</th> <th style="width: 15%;">Inspection Date</th> \
+        <th>OCI</th> <th style="width: 30%;">Notes</th> <th>Action</th> </tr> </thead> <tbody>';
+
+    $.each(data, function(index, item){
+      console.log(item)
+      body += "<tr class='ins-"+item['pk'].toString()+"' value='"+JSON.stringify(item['fields'])+"'> \
+          <td>"+status_values[item['fields']['status']]+"</td>\
+          <td>"+item['fields']['inspector']+"</td>\
+          <td>"+item['fields']['inspection_date'].split("T")[0]+"</td>\
+          <td>"+item['fields']['oci']+"</td>\
+          <td>"+item['fields']['notes']+"</td>\
+          <td><a href='javascript:void(0)' class='btn btn-secondary btn-sm' onclick='fillData("+item['pk'].toString()+")'>Edit</a></td>\
+        </tr>";
+    });
+    body += '</tbody> </table>';
+
+    $(".table-responsive").html(body);
+    $(".inspection-table").DataTable();
+
+    var chatData = [];
+
+    $.each(data, function(index, item){
+      var pt = {x: new Date(item['fields']['inspection_date']).getTime(),
+        y: parseFloat(item['fields']['oci'])}
+      chatData.push(pt);
+    });
+
+    $(".chart-panel").html('<div id="chat-container" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto"></div>');
+    console.log(chatData);
+    Highcharts.chart('chat-container', {
+      chart: {
+        type: 'scatter',
+      },
+      xAxis: {
+        type: 'datetime'
+      },
+      tooltip: {
+        formatter: function() {
+          return  '<b>' + this.series.name +'</b><br/>' +
+          Highcharts.dateFormat('%e. %b, %Y',
+            new Date(this.x)) + ' <br/> ' + this.y;
+        }
+      },
+      series: [{
+        name: 'Inspection',
+        color: 'rgba(223, 83, 83, .5)',
+        data: chatData
+      }]
+    })
+  }
+
+  function clearForm() {
+    $(".status").val('in-progress');
+    $(".inspector").val("");
+    $(".inspection_date").val("");
+    $(".oci").val("");
+    $(".notes").val("");
+    $(".asset-id").val("");
+
+    $(".btn-submit").html("Create");
+  }
+
+  function loadPage(asset_type) {
+    $(".inspection-loading-bar").show();
+    $.ajax({
+      method: "post",
+      url: "/api/inspection/"+asset_type+"/",
+      dataType: "json"
+    }).done(function (data) {
+      renderTable(data);
+      clearForm();
+      $(".inspection-loading-bar").hide();
+    });
+  }
+
+  function toggle(obj) {
+      $('.toggle-btn').addClass('toggle-deactive');
+      $(obj).removeClass('toggle-deactive');
+
+      if($(obj).html() == "Asset A") {
+        $('.asset-type').val("assetA");
+        loadPage("assetA");
+      } else {
+        $('.asset-type').val("assetB");
+        loadPage("assetB");
+      }
+  }
+
+  $(document).ready(function(){
+    $(".inspection-table").DataTable();
+
+    var asset_type = $(".asset-type").val();
+    loadPage(asset_type);
+
+    $('.btn-submit').on("click",function(e){
+        $('#myform').valid();
+        var asset_type = $(".asset-type").val();
+
+        $(".inspection-loading-bar").show();
+        $.ajax({
+          method: "post",
+          url: "/api/inspection-edit/"+asset_type+"/",
+          dataType: "json",
+          data: {data: JSON.stringify($('#myform').serializeArray())}
+        }).done(function (data) {
+          renderTable(data);
+          clearForm();
+          $(".inspection-loading-bar").hide();
+        });
+
+        e.preventDefault();
+    });
+  })
+</script>
+{% endblock %}

@@ -46,3 +46,8 @@ class UserEditForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             field.widget.attrs['placeholder'] = field.label
+
+class InspectionForm(forms.ModelForm):
+    class Meta:
+        model = Inspection
+        fields = ('__all__')

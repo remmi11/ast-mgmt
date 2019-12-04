@@ -28,6 +28,9 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
   </head>
   <body class="">
     <div class="page">
@@ -93,6 +96,13 @@
                       active
                     {% endif %}
                     "><i class="fe fe-map-pin"></i> Map </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'inspection_view' %}" class="nav-link 
+                    {% if '/inspection/' in request.path %}
+                      active
+                    {% endif %}
+                    "><i class="fe fe-camera"></i> Inspection </a>
                   </li>
                 </ul>
               </div>

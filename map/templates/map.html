@@ -491,7 +491,8 @@
       method: "post",
       url: "/api/form/formB/",
       dataType: "json",
-      data: {search: search, page: pageB, loadAll: refresh}
+      data: {search: search, page: pageB, loadAll: refresh,
+        filter: JSON.stringify($(".filters").serializeArray())}
     }).done(function (assets) {
       var body = "";
 
@@ -526,7 +527,8 @@
       method: "post",
       url: "/api/form/formA/",
       dataType: "json",
-      data: {search: search, page: pageA, loadAll: refresh}
+      data: {search: search, page: pageA, loadAll: refresh,
+        filter: JSON.stringify($(".filters").serializeArray())}
     }).done(function (assets) {
       var body = "";
 
@@ -574,13 +576,17 @@
       method: "post",
       url: "/api/geojson/",
       dataType: "json",
-      data: {search: search, pageA: pageA, pageB: pageB, filter: JSON.stringify($(".filters").serializeArray())}
+      data: {search: search, pageA: pageA, pageB: pageB,
+        filter: JSON.stringify($(".filters").serializeArray())}
     }).done(function (geoJson) {
 
       if (geoJson['points']['features'] && (assetType == "all" || assetType == "assetB")) {
         pointLayer = L.geoJSON(geoJson['points'], {
           onEachFeature: function(feature, layer) { // show popup, when hovering point
-            layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
+            var body = "";
+            body = "Asset A<br/>" + feature.properties['asset_id'];
+
+            layer.bindPopup(body, {closeButton: false});
             layer.on('mouseover', function() { layer.openPopup(); });
             layer.on('mouseout', function() { layer.closePopup(); });
           },
@@ -595,7 +601,10 @@
       if (geoJson['lines']['features'] && (assetType == "all" || assetType == "assetA")) {
         linesLayer = L.geoJSON(geoJson['lines'], {
           onEachFeature: function(feature, layer) { // show popup, when hovering polylines
-            layer.bindPopup(feature.properties['asset_id'], {closeButton: false});
+            var body = "";
+            body = "Asset B<br/>" + feature.properties['asset_id'];
+
+            layer.bindPopup(body, {closeButton: false});
             layer.on('mouseover', function() { layer.openPopup(); });
             layer.on('mouseout', function() { layer.closePopup(); });
           },
@@ -703,7 +712,6 @@
         pageB = 1;
 
         if ($('.asset-type').val() == "Asset A") {
-          console.log($(this).val())
           loadAssetA($(this).val(), 1);
         } else {
           loadAssetB($(this).val(), 1);
@@ -740,9 +748,22 @@
         cancelLabel: 'Clear'
       }
     });
+    $('.daterange').on('cancel.daterangepicker', function(ev, picker) {
+      $(this).val('');
+    });
+
     $(".filter-input").val("");
 
     $(".apply-filter").click(function(){
+      pageA = 1;
+      pageB = 1;
+
+      if ($('.asset-type').val() == "Asset A") {
+        loadAssetA($(this).val(), 1);
+      } else {
+        loadAssetB($(this).val(), 1);
+      }
+
       loadGeoJson($(this).val());
     });
     $(".clear-filter").click(function(){

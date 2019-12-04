@@ -90,7 +90,6 @@ def mapView(request):
 
     if request.POST:
         param = request.POST.dict()
-        print (param)
 
     return render(request, 'map.html', {
         'assetAList': assetAList, 'FUNC_CLASS': FUNC_CLASS,
@@ -102,11 +101,25 @@ def mapView(request):
     })
 
 @login_required
+def inspectionView(request):
+    return render(request, 'inspection.html', {})
+
+@login_required
 @csrf_exempt
 def apiForm(request, type):
     search_key = request.POST.get('search')
     page = int(request.POST.get('page', 1))
     load_all = int(request.POST.get('loadAll', 0))
+
+    filters = dict()
+    params = json.loads(request.POST.get('filter'))
+    for param in params:
+        if param['name'] in ['asset_type', 'recent', 'pavement', 'structure', 'function']:
+            if param['name'] not in filters.keys():
+                filters[param['name']] = []
+            filters[param['name']].append(param['value'])
+        else:
+            filters[param['name']] = param['value']
 
     temp = []
     users = CustomUser.objects.filter(company_id=request.user.company_id)
@@ -115,14 +128,28 @@ def apiForm(request, type):
     company_condition = Q(created_by__in=user_names.keys()) | \
             Q(updated_by__in=user_names.keys())
 
+    condition = company_condition
+    condition = commonSearch(condition, filters)
+
     if type == "formA":
+        if 'pavement' in filters:
+            condition = condition & Q(pavement_surface__in=filters['pavement'])
+        if 'function' in filters:
+            condition = condition & Q(func_class__in=filters['function'])
+        if 'function_text' in filters and filters['function_text'] != "":
+            condition = condition & Q(func_class__icontains=filters['function_text'])
+        if 'start' in filters and filters['start'] != "":
+            condition = condition & Q(start_location__iexact=filters['start'])
+        if 'end' in filters and filters['end'] != "":
+            condition = condition & Q(end_location__iexact=filters['end'])
+
         if search_key == "" or search_key == None:
             if load_all == 1:
-                assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')[:page * PAGE_SIZE]
+                assetAList = AssetAForm.objects.filter(condition).order_by('assetId')[:page * PAGE_SIZE]
             else:
-                assetAList = AssetAForm.objects.filter(company_condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
+                assetAList = AssetAForm.objects.filter(condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
         else:
-            codition = (Q(assetId__icontains=search_key) | \
+            global_search = (Q(assetId__icontains=search_key) | \
                 Q(start_location__icontains=search_key) | \
                 Q(end_location__icontains=search_key) | \
                 Q(asset_name__icontains=search_key) | \
@@ -130,9 +157,9 @@ def apiForm(request, type):
                 Q(pavement_surface__icontains=search_key))
 
             if load_all == 1:
-                assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')[:page * PAGE_SIZE]
+                assetAList = AssetAForm.objects.filter(condition & global_search).order_by('assetId')[:page * PAGE_SIZE]
             else:
-                assetAList = AssetAForm.objects.filter(company_condition & codition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
+                assetAList = AssetAForm.objects.filter(condition & global_search).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
 
         assetAList = json.loads(serializers.serialize('json', assetAList))
 
@@ -156,21 +183,24 @@ def apiForm(request, type):
 
             temp.append(asset)
     else:
+        if 'structure' in filters:
+            condition = condition & Q(support_structure__in=filters['structure'])
+
         if search_key == "" or search_key == None:
             if load_all == 1:
-                assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')[:page * PAGE_SIZE]
+                assetBList = AssetBForm.objects.filter(condition).order_by('assetId')[:page * PAGE_SIZE]
             else:
-                assetBList = AssetBForm.objects.filter(company_condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
+                assetBList = AssetBForm.objects.filter(condition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
         else:
-            codition = (Q(assetId__icontains=search_key) | \
+            global_search = (Q(assetId__icontains=search_key) | \
                 Q(type__icontains=search_key) | \
                 Q(code__icontains=search_key) | \
                 Q(support_structure__icontains=search_key))
 
             if load_all == 1:
-                assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')[:page * PAGE_SIZE]
+                assetBList = AssetBForm.objects.filter(condition & global_search).order_by('assetId')[:page * PAGE_SIZE]
             else:
-                assetBList = AssetBForm.objects.filter(company_condition & codition).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]            
+                assetBList = AssetBForm.objects.filter(condition & global_search).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]            
         
         assetBList = json.loads(serializers.serialize('json', assetBList))
 
@@ -283,6 +313,40 @@ def formEditB(request, pk):
 
 @login_required
 @csrf_exempt
+def apiInspection(request, type):
+    inspections = Inspection.objects.filter(asset_type=type)
+    inspections = serializers.serialize('json', inspections)
+
+    return HttpResponse(inspections, content_type='application/json')
+
+@login_required
+@csrf_exempt
+def apiEditInspection(request, type):
+    if request.POST:
+        param = dict()
+        data = json.loads(request.POST.get('data'))
+        for item in data:
+            if item['name'] == "csrfmiddlewaretoken" or (item['name'] == "assetId" and item['value'] == ""):
+                continue
+            param[item['name']] = item['value']
+
+        print (param)
+        param['oci'] = float(param['oci'])
+
+        if 'assetId' not in param.keys():
+            Inspection.objects.create(**param)
+        else:
+            inspection = Inspection.objects.get(pk=int(param['assetId']))
+            del param['assetId']
+            InspectionForm(param, instance=inspection).save()
+
+    inspections = Inspection.objects.filter(asset_type=type)
+    inspections = serializers.serialize('json', inspections)
+
+    return HttpResponse(inspections, content_type='application/json')
+
+@login_required
+@csrf_exempt
 def apiFormRemoveA(request, pk):
     asset = get_object_or_404(AssetAForm, pk=pk)
     if asset:
@@ -312,6 +376,34 @@ def apiCheckAssetId(request, type):
         return HttpResponse("True")
     return HttpResponse("False")
 
+def commonSearch(condition, filters):
+    if 'recent' in filters:
+        created, updated = None, None
+        if 'created' in filters['recent']:
+            created = Q(created_at__gte=date.today()-timedelta(days=7))
+        if 'updated' in filters['recent']:
+            updated = Q(updated_at__gte=date.today()-timedelta(days=7))
+
+        if created and updated:
+            condition = condition & (created | updated)
+        elif created:
+            condition = condition & created
+        elif updated:
+            condition = condition & updated
+
+    if 'install' in filters and filters['install'].strip() != "":
+        install = filters['install'].split("-")
+        install_start = datetime.strptime(install[0].strip(), '%m/%d/%Y')
+        install_end = datetime.strptime(install[1].strip(), '%m/%d/%Y')
+        condition = condition & Q(created_at__gte=install_start) & Q(created_at__lte=install_end)
+    if 'update' in filters and filters['update'].strip() != "":
+        update = filters['update'].split("-")
+        update_start = datetime.strptime(update[0].strip(), '%m/%d/%Y')
+        update_end = datetime.strptime(update[1].strip(), '%m/%d/%Y')
+        condition = condition & Q(created_at__gte=update_start) & Q(created_at__lte=update_end)
+
+    return condition
+
 @login_required
 @csrf_exempt
 def apiGeoJson(request):
@@ -323,6 +415,9 @@ def apiGeoJson(request):
     filters = dict()
     params = json.loads(request.POST.get('filter'))
     for param in params:
+        if param['name'] not in ['install', 'update', 'asset_type']:
+            param['value'] = "\'%s\'" % param['value']
+
         if param['name'] in ['asset_type', 'recent', 'pavement', 'structure', 'function']:
             if param['name'] not in filters.keys():
                 filters[param['name']] = []
@@ -338,6 +433,7 @@ def apiGeoJson(request):
     condition = company_condition
 
     if search_key != None and search_key != "":
+        search_key = "\'%s\'" % search_key
         temp = (Q(assetId__icontains=search_key) | \
             Q(start_location__icontains=search_key) | \
             Q(end_location__icontains=search_key) | \
@@ -346,24 +442,23 @@ def apiGeoJson(request):
             Q(pavement_surface__icontains=search_key))
         condition = condition & temp
     
-    if 'recent' in filters:
-        created, updated = None, None
-        if 'created' in filters['recent']:
-            created = Q(created_at__gte=date.today()-timedelta(days=7))
-        if 'updated' in filters['recent']:
-            updated = Q(updated_at__gte=date.today()-timedelta(days=7))
+    condition = commonSearch(condition, filters)
 
-        if created and updated:
-            condition = condition & (created | updated)
-        elif created:
-            condition = condition & created
-        elif updated:
-            condition = condition & updated
+    if 'pavement' in filters:
+        condition = condition & Q(pavement_surface__in=filters['pavement'])
+    if 'function' in filters:
+        condition = condition & Q(func_class__in=filters['function'])
+    if 'function_text' in filters and filters['function_text'] != "''":
+        condition = condition & Q(func_class__icontains=filters['function_text'])
+    if 'start' in filters and filters['start'] != "''":
+        condition = condition & Q(start_location__iexact=filters['start'])
+    if 'end' in filters and filters['end'] != "''":
+        condition = condition & Q(end_location__iexact=filters['end'])
 
     join_field = AssetAForm.objects.filter(condition)[(page_a-1) * PAGE_SIZE: page_a * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
     join_field = join_field.replace('at" >= ', 'at" >= \'').replace('00:00:00+00:00', '00:00:00+00:00\'')
-    print (join_field)
+    join_field = join_field.replace('at" <= ', 'at" <= \'')
 
     sql = '''SELECT row_to_json(fc)
         FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features
@@ -383,15 +478,27 @@ def apiGeoJson(request):
 
         res['lines'] = row[0]
 
-    join_field = AssetBForm.objects.filter(company_condition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
+    condition = company_condition
 
     if search_key != None and search_key != "":
-        codition = (Q(assetId__icontains=search_key) | \
-                Q(type__icontains=search_key) | \
-                Q(code__icontains=search_key) | \
-                Q(support_structure__icontains=search_key))
-        join_field = AssetBForm.objects.filter(company_condition & codition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
+        search_key = "\'%s\'" % search_key
+        temp = (Q(assetId__icontains=search_key) | \
+            Q(start_location__icontains=search_key) | \
+            Q(end_location__icontains=search_key) | \
+            Q(asset_name__icontains=search_key) | \
+            Q(func_class__icontains=search_key) | \
+            Q(pavement_surface__icontains=search_key))
+        condition = condition & temp
+    
+    condition = commonSearch(condition, filters)
+
+    if 'structure' in filters:
+        condition = condition & Q(support_structure__in=filters['structure'])
+
+    join_field = AssetBForm.objects.filter(condition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
+    join_field = join_field.replace('at" >= ', 'at" >= \'').replace('00:00:00+00:00', '00:00:00+00:00\'')
+    join_field = join_field.replace('at" <= ', 'at" <= \'')
 
     sql = '''SELECT row_to_json(fc)
         FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features
@@ -466,7 +573,6 @@ def apiFileUpload(request):
             wkt = None
         asset_id = feature.GetField("asset_id")
 
-        print ("start", asset_id)
         if 'start' in names:
             asset = AssetAForm.objects.filter(assetId=asset_id)
             asset_data = {key:feature.GetField(key) for key in FORMA_AVAILE if key in names}

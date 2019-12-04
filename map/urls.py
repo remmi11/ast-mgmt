@@ -11,6 +11,7 @@ urlpatterns = [
 	url(r'^form/$', views.formView, name='form_view'),
 	url(r'^form/edita/(?P<pk>\w+)/$', views.formEditA, name='form_edit_a'),
 	url(r'^form/editb/(?P<pk>\w+)/$', views.formEditB, name='form_edit_b'),
+	url(r'^inspection/$', views.inspectionView, name='inspection_view'),
 
 	url(r'^api/form/removea/(?P<pk>\w+)/$', views.apiFormRemoveA, name='form_remove_a'),
 	url(r'^api/form/removeb/(?P<pk>\w+)/$', views.apiFormRemoveB, name='form_remove_b'),
@@ -19,6 +20,9 @@ urlpatterns = [
 	url(r'^api/geojson/$', views.apiGeoJson, name='api_geojson'),
 	url(r'^api/upload/$', views.apiFileUpload, name='api_upload'),
 	url(r'^api/download/$', views.apiFileDownload, name='api_download'),
+
+	url(r'^api/inspection/(?P<type>\w+)/$', views.apiInspection, name='api_get_inspection'),
+	url(r'^api/inspection-edit/(?P<type>\w+)/$', views.apiEditInspection, name='api_edit_inspection'),
 	
 	# url(r'^update-profile/(?P<pk>\d+)/$', views.update_profile, name='update_profile'),
 ]

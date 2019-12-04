@@ -16810,3 +16810,17 @@ svg {
 .filter-card .form-label {
   border-bottom: 1px solid #868686;
 }
+.error {
+  color: red;
+}
+.inspection-loading-bar {
+  margin: auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  z-index: 1;
+}

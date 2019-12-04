@@ -53,3 +53,14 @@ class AssetBForm(models.Model):
 
     class Meta:
         db_table = 'form_asset_b'
+
+class Inspection(models.Model):
+    status = models.CharField(max_length=255, blank=True, null=True)
+    inspector = models.CharField(max_length=255, blank=True, null=True)
+    inspection_date = models.DateTimeField(blank=True, null=True)
+    oci = models.FloatField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    asset_type = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'inspection'
