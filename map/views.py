@@ -133,6 +133,13 @@ def apiForm(request, type):
         else:
             filters[param['name']] = param['value']
 
+    noFitler = True
+    print (filters)
+    for filter_key in filters:
+        if filter_key != "asset_type" and filters[filter_key] != "":
+            noFitler = False
+    print (noFitler)
+
     temp = []
     users = CustomUser.objects.filter(company_id=request.user.company_id)
     user_names = {tp.pk:tp.username for tp in users}
@@ -144,9 +151,9 @@ def apiForm(request, type):
     condition = commonSearch(condition, filters)
 
     if type == "formA":
-        if 'pavement' in filters:
+        if 'pavement' in filters and filters['pavement'] != "":
             condition = condition & Q(pavement_surface__in=filters['pavement'])
-        if 'function' in filters:
+        if 'function' in filters and filters['function'] != "":
             condition = condition & Q(func_class__in=filters['function'])
         if 'function_text' in filters and filters['function_text'] != "":
             condition = condition & Q(func_class__icontains=filters['function_text'])
@@ -174,6 +181,11 @@ def apiForm(request, type):
                 assetAList = AssetAForm.objects.filter(condition & global_search).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]
 
         assetAList = json.loads(serializers.serialize('json', assetAList))
+
+        if noFitler == False and condition == company_condition:
+            assetAList = []
+        if 'asset_type' in filters and 'assetA' not in filters['asset_type']:
+            assetAList = []
 
         for item in assetAList:
             asset = item['fields']
@@ -215,6 +227,11 @@ def apiForm(request, type):
                 assetBList = AssetBForm.objects.filter(condition & global_search).order_by('assetId')[(page-1) * PAGE_SIZE: page * PAGE_SIZE]            
         
         assetBList = json.loads(serializers.serialize('json', assetBList))
+
+        if noFitler == False and condition == company_condition:
+            assetBList = []
+        if 'asset_type' in filters and 'assetB' not in filters['asset_type']:
+            assetBList = []
 
         for item in assetBList:
             asset = item['fields']
@@ -421,6 +438,7 @@ def commonSearch(condition, filters):
         update_end = datetime.strptime(update[1].strip(), '%m/%d/%Y')
         condition = condition & Q(created_at__gte=update_start) & Q(created_at__lte=update_end)
 
+    print (condition)
     return condition
 
 @login_required
@@ -434,8 +452,8 @@ def apiGeoJson(request):
     filters = dict()
     params = json.loads(request.POST.get('filter'))
     for param in params:
-        if param['name'] not in ['install', 'update', 'asset_type']:
-            param['value'] = "\'%s\'" % param['value']
+        # if param['name'] not in ['install', 'update', 'asset_type']:
+        #     param['value'] = "\'%s\'" % param['value']
 
         if param['name'] in ['asset_type', 'recent', 'pavement', 'structure', 'function']:
             if param['name'] not in filters.keys():
@@ -449,7 +467,7 @@ def apiGeoJson(request):
 
     company_condition = Q(created_by__in=user_names.keys()) | \
             Q(updated_by__in=user_names.keys())
-    condition = company_condition
+    conditionA = company_condition
 
     if search_key != None and search_key != "":
         search_key = "\'%s\'" % search_key
@@ -459,25 +477,30 @@ def apiGeoJson(request):
             Q(asset_name__icontains=search_key) | \
             Q(func_class__icontains=search_key) | \
             Q(pavement_surface__icontains=search_key))
-        condition = condition & temp
-    
-    condition = commonSearch(condition, filters)
+        conditionA = conditionA & temp
+
+    conditionA = commonSearch(conditionA, filters)
 
     if 'pavement' in filters:
-        condition = condition & Q(pavement_surface__in=filters['pavement'])
+        filters['pavement'] = ["\'%s\'" % tp for tp in filters['pavement']]
+        conditionA = conditionA & Q(pavement_surface__in=filters['pavement'])
     if 'function' in filters:
-        condition = condition & Q(func_class__in=filters['function'])
-    if 'function_text' in filters and filters['function_text'] != "''":
-        condition = condition & Q(func_class__icontains=filters['function_text'])
-    if 'start' in filters and filters['start'] != "''":
-        condition = condition & Q(start_location__iexact=filters['start'])
-    if 'end' in filters and filters['end'] != "''":
-        condition = condition & Q(end_location__iexact=filters['end'])
+        filters['function'] = ["\'%s\'" % tp for tp in filters['function']]
+        conditionA = conditionA & Q(func_class__in=filters['function'])
+    if 'function_text' in filters and filters['function_text'] != "":
+        conditionA = conditionA & Q(func_class__icontains=filters['function_text'])
+    if 'start' in filters and filters['start'] != "":
+        filters['start'] = "\'%s\'" % filters['start']
+        conditionA = conditionA & Q(start_location__iexact=filters['start'])
+    if 'end' in filters and filters['end'] != "":
+        filters['end'] = "\'%s\'" % filters['end']
+        conditionA = conditionA & Q(end_location__iexact=filters['end'])
 
-    join_field = AssetAForm.objects.filter(condition)[(page_a-1) * PAGE_SIZE: page_a * PAGE_SIZE].query
+    join_field = AssetAForm.objects.filter(conditionA)[(page_a-1) * PAGE_SIZE: page_a * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
     join_field = join_field.replace('at" >= ', 'at" >= \'').replace('00:00:00+00:00', '00:00:00+00:00\'')
     join_field = join_field.replace('at" <= ', 'at" <= \'')
+    print (join_field)
 
     sql = '''SELECT row_to_json(fc)
         FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features
@@ -497,7 +520,7 @@ def apiGeoJson(request):
 
         res['lines'] = row[0]
 
-    condition = company_condition
+    conditionB = company_condition
 
     if search_key != None and search_key != "":
         search_key = "\'%s\'" % search_key
@@ -507,14 +530,15 @@ def apiGeoJson(request):
             Q(asset_name__icontains=search_key) | \
             Q(func_class__icontains=search_key) | \
             Q(pavement_surface__icontains=search_key))
-        condition = condition & temp
+        conditionB = conditionB & temp
     
-    condition = commonSearch(condition, filters)
+    conditionB = commonSearch(conditionB, filters)
 
     if 'structure' in filters:
-        condition = condition & Q(support_structure__in=filters['structure'])
+        filters['structure'] = ["\'%s\'" % tp for tp in filters['structure']]
+        conditionB = conditionB & Q(support_structure__in=filters['structure'])
 
-    join_field = AssetBForm.objects.filter(condition)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
+    join_field = AssetBForm.objects.filter(conditionB)[(page_b-1) * PAGE_SIZE: page_b * PAGE_SIZE].query
     join_field = str(join_field).split("WHERE")[1].strip()
     join_field = join_field.replace('at" >= ', 'at" >= \'').replace('00:00:00+00:00', '00:00:00+00:00\'')
     join_field = join_field.replace('at" <= ', 'at" <= \'')
@@ -542,6 +566,11 @@ def apiGeoJson(request):
             res['lines'] = []
         if 'assetB' not in filters['asset_type']:
             res['points'] = []
+
+    if conditionA != company_condition and conditionB == company_condition:
+        res['points'] = []
+    if conditionA == company_condition and conditionB != company_condition:
+        res['lines'] = []
 
     return HttpResponse(json.dumps(res), content_type='application/json')
 

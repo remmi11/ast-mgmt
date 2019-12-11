@@ -801,6 +801,20 @@
     $(".clear-filter").click(function(){
       $("input:checkbox").prop('checked', false);
       $(".filter-input").val("");
+
+      drawnItems.clearLayers();
+
+      $.each( lineLayers, function( index, layer ) {
+        map.removeLayer(layer);
+      });
+      $.each( pointLayers, function( index, layer ) {
+        map.removeLayer(layer);
+      });
+      lineLayers = [];
+      pointLayers = [];
+
+      $(".asset-a-body").html("");
+      $(".asset-b-body").html("");
     });
   });
 </script>
