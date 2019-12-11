@@ -61,6 +61,7 @@ class Inspection(models.Model):
     oci = models.FloatField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     asset_type = models.CharField(max_length=255, blank=True, null=True)
+    assetId = models.CharField(db_column='asset_id', max_length=255)
 
     class Meta:
         db_table = 'inspection'

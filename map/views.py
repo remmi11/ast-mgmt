@@ -44,7 +44,7 @@ SUPPORT_STRUCTURE = [
     ['concrete', 'Concrete']
 ]
 
-PAGE_SIZE = 10
+PAGE_SIZE = 1000
 
 # Controller for registering new user
 def register(request):
@@ -101,8 +101,20 @@ def mapView(request):
     })
 
 @login_required
-def inspectionView(request):
-    return render(request, 'inspection.html', {})
+def inspectionView(request, type):
+    assetId = request.GET.get('assetId', '')
+
+    if type == "assetA":
+        asset = get_object_or_404(AssetAForm, assetId=assetId)
+    else:
+        asset = get_object_or_404(AssetBForm, assetId=assetId)
+
+    created_user = CustomUser.objects.get(pk=asset.created_by)
+    updated_user = CustomUser.objects.get(pk=asset.created_by)
+    if created_user.company_id != request.user.company_id and updated_user.company_id != request.user.company_id:
+        get_object_or_404(AssetAForm, assetId='')
+
+    return render(request, 'inspection.html', {"assetType": type, "assetId": assetId})
 
 @login_required
 @csrf_exempt
@@ -314,7 +326,10 @@ def formEditB(request, pk):
 @login_required
 @csrf_exempt
 def apiInspection(request, type):
-    inspections = Inspection.objects.filter(asset_type=type)
+    assetId = request.GET.get("assetId", "")
+
+    print (assetId, type)
+    inspections = Inspection.objects.filter(asset_type=type, assetId=assetId)
     inspections = serializers.serialize('json', inspections)
 
     return HttpResponse(inspections, content_type='application/json')
@@ -325,22 +340,24 @@ def apiEditInspection(request, type):
     if request.POST:
         param = dict()
         data = json.loads(request.POST.get('data'))
+        assetId = request.POST.get('assetId')
         for item in data:
-            if item['name'] == "csrfmiddlewaretoken" or (item['name'] == "assetId" and item['value'] == ""):
+            if item['name'] == "csrfmiddlewaretoken" or (item['name'] == "inspectionId" and item['value'] == ""):
                 continue
             param[item['name']] = item['value']
 
         print (param)
         param['oci'] = float(param['oci'])
+        param['assetId'] = assetId
 
-        if 'assetId' not in param.keys():
+        if 'inspectionId' not in param.keys():
             Inspection.objects.create(**param)
         else:
-            inspection = Inspection.objects.get(pk=int(param['assetId']))
-            del param['assetId']
+            inspection = Inspection.objects.get(pk=int(param['inspectionId']))
+            del param['inspectionId']
             InspectionForm(param, instance=inspection).save()
 
-    inspections = Inspection.objects.filter(asset_type=type)
+    inspections = Inspection.objects.filter(asset_type=type, assetId=assetId)
     inspections = serializers.serialize('json', inspections)
 
     return HttpResponse(inspections, content_type='application/json')
@@ -350,6 +367,7 @@ def apiEditInspection(request, type):
 def apiFormRemoveA(request, pk):
     asset = get_object_or_404(AssetAForm, pk=pk)
     if asset:
+        Inspection.objects.filter(assetId=asset.assetId, asset_type='assetA').delete()
         asset.delete()
 
     return HttpResponse("OK")
@@ -359,6 +377,7 @@ def apiFormRemoveA(request, pk):
 def apiFormRemoveB(request, pk):
     asset = get_object_or_404(AssetBForm, pk=pk)
     if asset:
+        Inspection.objects.filter(assetId=asset.assetId, asset_type='assetA').delete()
         asset.delete()
 
     return HttpResponse("OK")

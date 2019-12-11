@@ -6,19 +6,19 @@
 <div class="container">
   <img src="{% static 'loading.gif' %}" class="inspection-loading-bar" style="display: none" />
     <div class="row">
-      <div class="col-12">
+      <!-- <div class="col-12">
         <div class="toggle-form-group">
           <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
           <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
         </div>
-      </div>
+      </div> -->
       <div class="col-12">
         <form method="post" class="card" id="myform">
-          <input type="hidden" name="asset_type" class="asset-type" value="assetA" />
-          <input type="hidden" name="assetId" class="asset-id" />
+          <input type="hidden" name="asset_type" class="asset-type" value="{{assetType}}" />
+          <input type="hidden" name="inspectionId" class="inspection-id" />
           {% csrf_token %}
           <div class="card-header">
-            <h3 class="card-title">Inspection</h3>
+            <h3 class="card-title">Inspections - {{assetId}}</h3>
           </div>
           <div class="card-body">
             <div class="row">
@@ -32,15 +32,15 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Inspector</label>
-                  <input type="text" class="form-control inspector" name="inspector" placeholder="Inspector" required />
+                  <input type="text" class="form-control inspector" id="inspector" name="inspector" placeholder="Inspector" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Inspection Date</label>
-                  <input type="text" class="form-control date inspection_date" name="inspection_date" required />
+                  <input type="text" class="form-control date inspection_date" id="inspection_date" name="inspection_date" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">OCI</label>
-                  <input type="number" class="form-control oci" name="oci" required />
+                  <input type="number" class="form-control oci" id="oci" name="oci" required />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Notes</label>
@@ -86,7 +86,7 @@
     $(".inspection_date").val(inspection['inspection_date'].split("T")[0]);
     $(".oci").val(inspection['oci']);
     $(".notes").val(inspection['notes']);
-    $(".asset-id").val(pk);
+    $(".inspection-id").val(pk);
 
     $(".btn-submit").html("Edit");
   }
@@ -121,8 +121,11 @@
     });
 
     $(".chart-panel").html('<div id="chat-container" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto"></div>');
-    console.log(chatData);
+
     Highcharts.chart('chat-container', {
+      title: {
+      	text: "Inspections"
+      },
       chart: {
         type: 'scatter',
       },
@@ -150,16 +153,16 @@
     $(".inspection_date").val("");
     $(".oci").val("");
     $(".notes").val("");
-    $(".asset-id").val("");
+    $(".inspection-id").val("");
 
     $(".btn-submit").html("Create");
   }
 
-  function loadPage(asset_type) {
+  function loadPage(asset_type, asset_id) {
     $(".inspection-loading-bar").show();
     $.ajax({
       method: "post",
-      url: "/api/inspection/"+asset_type+"/",
+      url: "/api/inspection/"+asset_type+"/?assetId="+asset_id,
       dataType: "json"
     }).done(function (data) {
       renderTable(data);
@@ -174,10 +177,10 @@
 
       if($(obj).html() == "Asset A") {
         $('.asset-type').val("assetA");
-        loadPage("assetA");
+        loadPage("assetA", '{{assetId}}');
       } else {
         $('.asset-type').val("assetB");
-        loadPage("assetB");
+        loadPage("assetB", '{{assetId}}');
       }
   }
 
@@ -185,23 +188,39 @@
     $(".inspection-table").DataTable();
 
     var asset_type = $(".asset-type").val();
-    loadPage(asset_type);
+    loadPage(asset_type, '{{assetId}}');
+
+    $('#myform').validate({
+    	rules: {
+    		inspector: {
+    			required: true,
+    		},
+    		inspection_date: {
+    			required: true,
+    		},
+    		oci: {
+    			required: true,
+    			range: [1, 100]
+    		}
+    	}
+    })
 
     $('.btn-submit').on("click",function(e){
-        $('#myform').valid();
-        var asset_type = $(".asset-type").val();
+        if ($('#myform').valid()) {
+	        var asset_type = $(".asset-type").val();
 
-        $(".inspection-loading-bar").show();
-        $.ajax({
-          method: "post",
-          url: "/api/inspection-edit/"+asset_type+"/",
-          dataType: "json",
-          data: {data: JSON.stringify($('#myform').serializeArray())}
-        }).done(function (data) {
-          renderTable(data);
-          clearForm();
-          $(".inspection-loading-bar").hide();
-        });
+	        $(".inspection-loading-bar").show();
+	        $.ajax({
+	          method: "post",
+	          url: "/api/inspection-edit/"+asset_type+"/",
+	          dataType: "json",
+	          data: {data: JSON.stringify($('#myform').serializeArray()), assetId: '{{assetId}}'}
+	        }).done(function (data) {
+	          renderTable(data);
+	          clearForm();
+	          $(".inspection-loading-bar").hide();
+	        });
+        }
 
         e.preventDefault();
     });

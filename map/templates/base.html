@@ -69,7 +69,9 @@
                 {% if '/map/' in request.path %}
 
                 <div class = row>
-                  <div class="input-icon my-3 my-lg-3">
+                  <div class="col-3 my-6 my-lg-6" style="margin: 0px !important;">
+                  </div>
+                  <div class="input-icon my-3 my-lg-3" style="margin: 9px !important;">
                     <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
                     <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
                   </div>
@@ -96,13 +98,6 @@
                       active
                     {% endif %}
                     "><i class="fe fe-map-pin"></i> Map </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="{% url 'inspection_view' %}" class="nav-link 
-                    {% if '/inspection/' in request.path %}
-                      active
-                    {% endif %}
-                    "><i class="fe fe-camera"></i> Inspection </a>
                   </li>
                 </ul>
               </div>

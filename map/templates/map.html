@@ -192,6 +192,13 @@
               <input type="text" name="end" class="form-control filter-input">
             </div>
           </div>
+          <div class="row">
+            <div class="col-md-6 col-lg-6">
+              <div class="form-group">
+                <a class="btn btn-primary draw-circle" onclick="javascript:void(0)">Draw circle on map</a>
+              </div>
+            </div>
+          </div>
         </div>
         </form>
       </div>
@@ -503,7 +510,7 @@
           "</td><td>" + asset['code'] + 
           "</td><td class='text-capitalize'>" + asset['support_structure'] + 
           "</td><td>" + asset['created_by'] + 
-          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"editb\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removeb\")'></i></td></tr>";
+          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"editb\")'></i></td></tr>";
       }
 
       if (refresh == 1) {
@@ -544,7 +551,7 @@
           "</td><td>" + asset['wide'] + 
           "</td><td>" + asset['area'] + 
           "</td><td>" + asset['created_by'] + 
-          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"edita\")'></i><i class='fa fa-remove' onclick='removeForm(this, "+asset['id']+", \"removea\")'></i></td></tr>";
+          "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"edita\")'></i></td></tr>";
       }
 
       if (refresh == 1) {
@@ -663,11 +670,18 @@
     var type = e.layerType,
         layer = e.layer;
 
-    $('#detail-modal').modal('show');
-    $(".form-value").val("");
-    $(".area-calc").val("0");
-    $(".area").val("0");
-    $(".geometry").val(toWKT(e.layer))
+    if (type != "circle") {
+      $('#detail-modal').modal('show');
+      $(".form-value").val("");
+      $(".area-calc").val("0");
+      $(".area").val("0");
+      $(".geometry").val(toWKT(e.layer))
+    } else {
+      var theCenterPt = layer.getLatLng();
+      var theRadius = layer.getRadius();
+      console.log(theCenterPt)
+      console.log(layer.getBounds());
+    }
 
     {% if param|get_value:'asset_type' == 'Asset A' %}
       $(".asseta-assetId").val("{{param|get_value:'asset_id_a'}}");
@@ -692,13 +706,32 @@
       $('.asset-a-form-body').hide();
       $('.asset-b-form-body').show();
       $(".asset-type").val('Asset B');
-    } else {
+    } else if (type == "polyline") {
       $('.asset-a-form-body').show();
       $('.asset-b-form-body').hide();
       $(".asset-type").val('Asset A');
+
+      console.log(layer.getLatLngs());
+      var length = 0, previousPoint;
+      layer.getLatLngs().forEach(function (latLng) {
+        if (previousPoint) {
+          length += previousPoint.distanceTo(latLng)
+        }
+        previousPoint = latLng;
+      });
+      length = length * 3.28;
+      $(".length").val(length.toFixed(2).toString());
     }
 
     drawnItems.addLayer(layer);
+  });
+
+  var polygonDrawer = new L.Draw.Circle(map);
+
+  // Click handler for you button to start drawing polygons
+  $('.draw-circle').click(function() {
+      console.log("ppppppppp")
+      polygonDrawer.enable();
   });
 
   $(document).ready(function(){

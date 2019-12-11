@@ -16824,3 +16824,6 @@ svg {
   height: 50px;
   z-index: 1;
 }
+.container {
+  max-width: 90% !important;
+}

@@ -4,12 +4,14 @@
 
 {% block content %}
   <div class="container">
+    <img src="{% static 'loading.gif' %}" class="inspection-loading-bar" style="display: none" />
     <div class="row">
       <div class="col-12">
         <form method="post" class="card">
           {% csrf_token %}
           <div class="card-header">
             <h3 class="card-title">Edit Asset A</h3>
+            <a class="btn btn-success" href="/inspection/assetA/?assetId={{asset.assetId}}" style="position: absolute; right: 25px">Inspections</a>
           </div>
           <div class="card-body">
             <div class="row asset-a-form">
@@ -87,6 +89,7 @@
           </div>
           <div class="card-footer text-right">
             <button type="submit" class="btn btn-primary">Save</button>
+            <a href="javascript:void(0)" class="btn btn-primary" onclick="removeForm(this, '{{asset.pk}}', 'removea')">Remove</a>
           </div>
         </form>
       </div>
@@ -94,6 +97,22 @@
   </div>
 
   <script type="text/javascript">
+    // remove asset
+    function removeForm(obj, id, type) {
+      var r = confirm("Do you really remove this asset?");
+      if (r) {
+        var url = '/api/form/'+type+'/'+id+'/';
+        $(".inspection-loading-bar").show();
+        $.ajax({
+          method: "post",
+          url: url
+        }).done(function (assets) {
+          window.location.href = "/map/";
+          $(".inspection-loading-bar").hide();
+        });
+      }
+    }
+
     $(document).ready(function(){
     });
   </script>

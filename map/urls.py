@@ -11,7 +11,7 @@ urlpatterns = [
 	url(r'^form/$', views.formView, name='form_view'),
 	url(r'^form/edita/(?P<pk>\w+)/$', views.formEditA, name='form_edit_a'),
 	url(r'^form/editb/(?P<pk>\w+)/$', views.formEditB, name='form_edit_b'),
-	url(r'^inspection/$', views.inspectionView, name='inspection_view'),
+	url(r'^inspection/(?P<type>\w+)/$', views.inspectionView, name='inspection_view'),
 
 	url(r'^api/form/removea/(?P<pk>\w+)/$', views.apiFormRemoveA, name='form_remove_a'),
 	url(r'^api/form/removeb/(?P<pk>\w+)/$', views.apiFormRemoveB, name='form_remove_b'),
