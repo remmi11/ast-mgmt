@@ -44,7 +44,7 @@ SUPPORT_STRUCTURE = [
     ['concrete', 'Concrete']
 ]
 
-PAGE_SIZE = 1000
+PAGE_SIZE = 10
 
 # Controller for registering new user
 def register(request):
