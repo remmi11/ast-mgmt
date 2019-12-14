@@ -752,7 +752,10 @@ def uploadInspections(request):
         except:
             pass
         inspection.oci = float(row[4])
-        inspection.notes = row[5]
+        try:
+            inspection.notes = row[5]
+        except:
+            pass
         inspection.assetId = row[0]
         inspection.save() 
 

@@ -84,15 +84,14 @@
                 </div>
                 {% else %}
                 <div class = row>
-                  <div class="col-4"></div>
-                  <div class="custom-file col-6">
-                      <input type="file" class="custom-file-input" id="inspectionFile" accept=".csv">
-                      <label class="custom-file-label">Import Inspectoins</label>
+                  <div class="col-3"></div>
+                  <div class="col-5" style="text-align: right">
+                      <input type="file" id="inspectionFile" accept=".csv">
                   </div>
-                  <div class="col-2">
+                  <div class="col-4">
                     <button type="submit" class="btn btn-primary" 
                     onclick="uploadInspection()" style="float: left;">
-                      Upload
+                      Import Inspections
                       <img src="{% static 'loading.gif' %}" class="inspectoin-upload-loading-bar" style="display: none" />
                     </button>
                   </div>
