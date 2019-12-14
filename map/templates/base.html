@@ -69,13 +69,13 @@
                 {% if '/map/' in request.path %}
 
                 <div class = row>
-                  <div class="col-3 my-6 my-lg-6" style="margin: 0px !important;">
+                  <div class="col-1 my-6 my-lg-6" style="margin: 0px !important;">
                   </div>
-                  <div class="input-icon my-3 my-lg-3" style="margin: 9px !important;">
+                  <div class="col-5 input-icon my-3 my-lg-3" style="margin: 9px 0px !important; text-align: right">
                     <button class="btn btn-primary toggle-btn" onclick="toggle(this)">Asset A</button>
                     <button class="btn btn-primary toggle-deactive toggle-btn" onclick="toggle(this)">Asset B</button>
                   </div>
-                  <div class="input-icon my-3 my-lg-0" style="margin-left: 10%;">
+                  <div class="col-6 input-icon my-3 my-lg-0" style="padding-left: 10%;">
                     <input type="search" class="form-control header-search" placeholder="Search&hellip;" tabindex="1" style="margin: 5px;">
                     <div class="input-icon-addon">
                       <i class="fe fe-search"></i>
@@ -84,8 +84,8 @@
                 </div>
                 {% else %}
                 <div class = row>
-                  <div class="col-6"></div>
-                  <div class="custom-file col-4">
+                  <div class="col-4"></div>
+                  <div class="custom-file col-6">
                       <input type="file" class="custom-file-input" id="inspectionFile" accept=".csv">
                       <label class="custom-file-label">Import Inspectoins</label>
                   </div>
