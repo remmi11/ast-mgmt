@@ -723,7 +723,7 @@ def apiFileUpload(request):
 
 @login_required
 @csrf_exempt
-def uploadInpsections(request):
+def uploadInspections(request):
     f = request.FILES['file']
     file_name = uuid.uuid4()
 
@@ -744,7 +744,13 @@ def uploadInpsections(request):
         inspection = Inspection()
         inspection.status = 'completed' if row[1] == "Completed" else 'in-progress'
         inspection.inspector = row[2]
-        inspection.inspection_date = row[3]
+        try:
+            if "/" in row[3]:
+                date = row[3].split("/")
+                date = "%s-%s-%s" % (date[2], date[0], date[1])
+            inspection.inspection_date = date
+        except:
+            pass
         inspection.oci = float(row[4])
         inspection.notes = row[5]
         inspection.assetId = row[0]

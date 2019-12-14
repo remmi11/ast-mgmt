@@ -23,7 +23,7 @@ urlpatterns = [
 
 	url(r'^api/inspection/(?P<type>\w+)/$', views.apiInspection, name='api_get_inspection'),
 	url(r'^api/inspection-edit/(?P<type>\w+)/$', views.apiEditInspection, name='api_edit_inspection'),
-	url(r'^api/upload-inspections/$', views.uploadInpsections, name='upload_inspections'),
+	url(r'^api/upload-inspections/$', views.uploadInspections, name='upload_inspections'),
 	
 	# url(r'^update-profile/(?P<pk>\d+)/$', views.update_profile, name='update_profile'),
 ]
