@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 
 import json
+import csv
 import zipfile
 import osgeo.ogr
 from datetime import date, datetime, timedelta
@@ -345,8 +346,10 @@ def formEditB(request, pk):
 def apiInspection(request, type):
     assetId = request.GET.get("assetId", "")
 
+    # Inspection.objects.filter(assetId='A-0008').delete()
+
     print (assetId, type)
-    inspections = Inspection.objects.filter(asset_type=type, assetId=assetId)
+    inspections = Inspection.objects.filter(assetId=assetId)
     inspections = serializers.serialize('json', inspections)
 
     return HttpResponse(inspections, content_type='application/json')
@@ -374,7 +377,7 @@ def apiEditInspection(request, type):
             del param['inspectionId']
             InspectionForm(param, instance=inspection).save()
 
-    inspections = Inspection.objects.filter(asset_type=type, assetId=assetId)
+    inspections = Inspection.objects.filter(assetId=assetId)
     inspections = serializers.serialize('json', inspections)
 
     return HttpResponse(inspections, content_type='application/json')
@@ -384,7 +387,7 @@ def apiEditInspection(request, type):
 def apiFormRemoveA(request, pk):
     asset = get_object_or_404(AssetAForm, pk=pk)
     if asset:
-        Inspection.objects.filter(assetId=asset.assetId, asset_type='assetA').delete()
+        Inspection.objects.filter(assetId=asset.assetId).delete()
         asset.delete()
 
     return HttpResponse("OK")
@@ -394,7 +397,7 @@ def apiFormRemoveA(request, pk):
 def apiFormRemoveB(request, pk):
     asset = get_object_or_404(AssetBForm, pk=pk)
     if asset:
-        Inspection.objects.filter(assetId=asset.assetId, asset_type='assetA').delete()
+        Inspection.objects.filter(assetId=asset.assetId).delete()
         asset.delete()
 
     return HttpResponse("OK")
@@ -715,6 +718,39 @@ def apiFileUpload(request):
                 print ("created", asset_id)
 
     shutil.rmtree("upload/%s" % file_name)
+
+    return HttpResponse("OK")
+
+@login_required
+@csrf_exempt
+def uploadInpsections(request):
+    f = request.FILES['file']
+    file_name = uuid.uuid4()
+
+    # save uploaded file in the server side
+    with open('upload/%s.csv' % file_name, 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+
+    data_fp = open('upload/%s.csv' % file_name, "r")
+    rows = csv.reader(data_fp, delimiter=',', quotechar='"')
+
+    idx = 0
+    for row in rows:
+        if idx == 0:
+            idx += 1
+            continue
+
+        inspection = Inspection()
+        inspection.status = 'completed' if row[1] == "Completed" else 'in-progress'
+        inspection.inspector = row[2]
+        inspection.inspection_date = row[3]
+        inspection.oci = float(row[4])
+        inspection.notes = row[5]
+        inspection.assetId = row[0]
+        inspection.save() 
+
+    os.remove("upload/%s.csv" % file_name)
 
     return HttpResponse("OK")
 

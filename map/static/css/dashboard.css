@@ -16801,7 +16801,7 @@ svg {
   margin-left: 48%;
   bottom: 66px;
 }
-.upload-loading-bar {
+.upload-loading-bar, .inspectoin-upload-loading-bar {
   width: 20px;
 }
 .filter-card {

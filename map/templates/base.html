@@ -82,6 +82,21 @@
                     </div>
                   </div>
                 </div>
+                {% else %}
+                <div class = row>
+                  <div class="col-6"></div>
+                  <div class="custom-file col-4">
+                      <input type="file" class="custom-file-input" id="inspectionFile" accept=".csv">
+                      <label class="custom-file-label">Import Inspectoins</label>
+                  </div>
+                  <div class="col-2">
+                    <button type="submit" class="btn btn-primary" 
+                    onclick="uploadInspection()" style="float: left;">
+                      Upload
+                      <img src="{% static 'loading.gif' %}" class="inspectoin-upload-loading-bar" style="display: none" />
+                    </button>
+                  </div>
+                </div>
                 {% endif %}
               </div>
               <div class="col-lg order-lg-first">
@@ -124,6 +139,28 @@
 </html>
 
 <script type="text/javascript">
+  function uploadInspection() {
+    var formData = new FormData();
+
+    if (!$('#inspectionFile')[0].files[0])
+      return;
+
+    formData.append('file', $('#inspectionFile')[0].files[0]);
+
+    $(".inspectoin-upload-loading-bar").show();
+    $.ajax({
+      url : '/api/upload-inspections/',
+      type : 'POST',
+      data : formData,
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,  // tell jQuery not to set contentType
+      success : function(data) {
+        $(".inspectoin-upload-loading-bar").hide();
+
+      }
+    });
+  }
+
   $(document).ready(function(){
     $(".date").datepicker({format: 'yyyy-mm-dd'});
 
