@@ -113,6 +113,13 @@
                     {% endif %}
                     "><i class="fe fe-map-pin"></i> Map </a>
                   </li>
+                  <li class="inspection-link nav-item" style="display: none">
+                    <a href="#" class="nav-link nav-inspection
+                    {% if '/inspection/' in request.path %}
+                      active
+                    {% endif %}
+                    "><i class="fe fe-shopping-bag"></i> Inspections </a>
+                  </li>
                 </ul>
               </div>
             </div>

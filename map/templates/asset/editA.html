@@ -11,7 +11,6 @@
           {% csrf_token %}
           <div class="card-header">
             <h3 class="card-title">Edit Asset A</h3>
-            <a class="btn btn-success" href="/inspection/assetA/?assetId={{asset.assetId}}" style="position: absolute; right: 25px">Inspections</a>
           </div>
           <div class="card-body">
             <div class="row asset-a-form">
@@ -114,6 +113,8 @@
     }
 
     $(document).ready(function(){
+      $(".inspection-link").show();
+      $(".nav-inspection").attr('href', '/inspection/assetA/?assetId={{asset.assetId}}');
     });
   </script>
 {% endblock %}
