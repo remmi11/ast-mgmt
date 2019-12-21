@@ -212,20 +212,33 @@
 
         <img class="loading-bar" src="{% static 'loading.gif' %}" style="display: none">
         <div class="table-responsive asset-a-table">
+          <div class="table-fixed-header" style="position: absolute; background: white; width: 100%;border-bottom: 2px solid #dee2e6; color: #9aa0ac;">
+            <div style="width: 7%; display: inline-block; padding: .5em; padding-left: 1.5em;">ID</div>
+            <div style="width: 10%; display: inline-block;">Asset Name</div>
+            <div style="width: 10%; display: inline-block;">Start Location</div>
+            <div style="width: 10%; display: inline-block;">End Location</div>
+            <div style="width: 7%; display: inline-block;">Function</div>
+            <div style="width: 12%; display: inline-block;">Pavement Surface</div>
+            <div style="width: 7%; display: inline-block;">Length</div>
+            <div style="width: 7%; display: inline-block;">Wide</div>
+            <div style="width: 7%; display: inline-block;">Area</div>
+            <div style="width: 9%; display: inline-block;">User</div>
+            <div style="display: inline-block;">Edit/Review</div>
+          </div>
           <table class="table card-table table-striped table-vcenter text-nowrap">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Asset Name</th>
-                <th>Start Location</th>
-                <th>End Location</th>
-                <th>Function</th>
-                <th>Pavement Surface</th>
-                <th>Length</th>
-                <th>Wide</th>
-                <th>Area</th>
-                <th>User</th>
-                <th style="width: 50px;">Edit/Review</th>
+                <th style="width: 7%">ID</th>
+                <th style="width: 10%">Asset Name</th>
+                <th style="width: 10%">Start Location</th>
+                <th style="width: 10%">End Location</th>
+                <th style="width: 7%">Function</th>
+                <th style="width: 13%">Pavement Surface</th>
+                <th style="width: 7%">Length</th>
+                <th style="width: 7%">Wide</th>
+                <th style="width: 7%">Area</th>
+                <th style="width: 10%">User</th>
+                <th>Edit/Review</th>
               </tr>
               <tbody class="asset-a-body">
                  
@@ -236,15 +249,23 @@
         <!-- end asset a table panel -->
         <!-- start asset a table panel -->
         <div class="table-responsive asset-b-table" style="display: none">
+          <div class="table-fixed-header" style="position: absolute; background: white; width: 100%;border-bottom: 2px solid #dee2e6; color: #9aa0ac;">
+            <div class="id" style="width: 14%; display: inline-block; padding: .5em; padding-left: 1.5em;">ID</div>
+            <div class="type" style="width: 15%; display: inline-block; padding: .5em;">Type</div>
+            <div class="code" style="width: 15%; display: inline-block;">Code</div>
+            <div class="support-structure" style="width: 25%; display: inline-block;">Support Structure</div>
+            <div class="user" style="width: 14%; display: inline-block;">User</div>
+            <div class="edit" style="width: 10%; display: inline-block;">Edit/Review</div>
+          </div>
           <table class="table card-table table-striped table-vcenter text-nowrap">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Code</th>
-                <th>Support Structure</th>
-                <th>User</th>
-                <th style="width: 50px;">Edit/Review</th>
+                <th style="width: 15%">ID</th>
+                <th style="width: 15%">Type</th>
+                <th style="width: 15%">Code</th>
+                <th style="width: 25%;">Support Structure</th>
+                <th style="width: 15%">User</th>
+                <th>Edit/Review</th>
               </tr>
               <tbody class="asset-b-body">
                  

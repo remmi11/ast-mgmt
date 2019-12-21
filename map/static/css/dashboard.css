@@ -9536,7 +9536,7 @@ body {
   }
 }
 
-body *::-webkit-scrollbar {
+/*body *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
   transition: .3s background;
@@ -9548,7 +9548,7 @@ body *::-webkit-scrollbar-thumb {
 
 body *:hover::-webkit-scrollbar-thumb {
   background: #adb5bd;
-}
+}*/
 
 .lead {
   line-height: 1.4;
