@@ -214,11 +214,11 @@
         <div class="table-responsive asset-a-table">
           <div class="table-fixed-header" style="position: absolute; background: white; width: 100%;border-bottom: 2px solid #dee2e6; color: #9aa0ac;">
             <div style="width: 7%; display: inline-block; padding: .5em; padding-left: 1.5em;">ID</div>
-            <div style="width: 10%; display: inline-block;">Asset Name</div>
-            <div style="width: 10%; display: inline-block;">Start Location</div>
-            <div style="width: 10%; display: inline-block;">End Location</div>
-            <div style="width: 7%; display: inline-block;">Function</div>
-            <div style="width: 12%; display: inline-block;">Pavement Surface</div>
+            <div style="width: 10%; display: inline-block; white-space: nowrap;">Asset Name</div>
+            <div style="width: 10%; display: inline-block; white-space: nowrap;">Start Location</div>
+            <div style="width: 10%; display: inline-block; white-space: nowrap;">End Location</div>
+            <div style="width: 9%; display: inline-block;">Function</div>
+            <div style="width: 12%; display: inline-block; white-space: nowrap;">Pavement Surface</div>
             <div style="width: 7%; display: inline-block;">Length</div>
             <div style="width: 7%; display: inline-block;">Wide</div>
             <div style="width: 7%; display: inline-block;">Area</div>
@@ -232,7 +232,7 @@
                 <th style="width: 10%">Asset Name</th>
                 <th style="width: 10%">Start Location</th>
                 <th style="width: 10%">End Location</th>
-                <th style="width: 7%">Function</th>
+                <th style="width: 9%">Function</th>
                 <th style="width: 13%">Pavement Surface</th>
                 <th style="width: 7%">Length</th>
                 <th style="width: 7%">Wide</th>
@@ -562,15 +562,15 @@
 
       for(var i = 0; i < assets.length ; i++){
         var asset = assets[i];
-        body += "<tr><td style='padding-left: 25px!important;'>" + asset['assetId'] + 
+        body += "<tr><td style='padding-left: 0.5em !important;'>" + asset['assetId'] + 
           "</td><td>" + asset['asset_name'] + 
           "</td><td>" + asset['start_location'] + 
           "</td><td>" + asset['end_location'] + 
           "</td><td class='text-capitalize'>" + asset['func_class'] + 
           "</td><td class='text-capitalize'>" + asset['pavement_surface'] + 
-          "</td><td>" + asset['length'] + 
-          "</td><td>" + asset['wide'] + 
-          "</td><td>" + asset['area'] + 
+          "</td><td>" + parseFloat(asset['length']).toFixed(1).toString() + 
+          "</td><td>" + parseFloat(asset['wide']).toFixed(1).toString() + 
+          "</td><td>" + parseFloat(asset['area']).toFixed(1).toString() + 
           "</td><td>" + asset['created_by'] + 
           "<td class='asset-action'><i class='fa fa-pencil' onclick='editForm("+asset['id']+", \"edita\")'></i></td></tr>";
       }
