@@ -111,7 +111,7 @@ def inspectionView(request, type):
         asset = get_object_or_404(AssetBForm, assetId=assetId)
 
     created_user = CustomUser.objects.get(pk=asset.created_by)
-    updated_user = CustomUser.objects.get(pk=asset.created_by)
+    updated_user = CustomUser.objects.get(pk=asset.updated_by)
     if created_user.company_id != request.user.company_id and updated_user.company_id != request.user.company_id:
         get_object_or_404(AssetAForm, assetId='')
 
