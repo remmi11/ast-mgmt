@@ -626,7 +626,10 @@ def apiFileUpload(request):
 
         if 'start' in names:
             asset = AssetAForm.objects.filter(assetId=asset_id)
-            asset_data = {key:feature.GetField(key) for key in FORMA_AVAILE if key in names}
+            asset_data = {key:feature.GetField(key) for key in FORMA_AVAILE if key in names and feature.GetField(key) != 'None' and feature.GetField(key)}
+
+            asset_data['length'] = asset_data['length'] if 'length' in asset_data.keys() else 0
+            asset_data['wide'] = asset_data['wide'] if 'wide' in asset_data.keys() else 0
 
             if 'install' in asset_data and asset_data['install']:
                 asset_data['install'] = asset_data['install'].replace("/", "-")
