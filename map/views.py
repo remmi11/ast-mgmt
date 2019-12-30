@@ -628,9 +628,6 @@ def apiFileUpload(request):
             asset = AssetAForm.objects.filter(assetId=asset_id)
             asset_data = {key:feature.GetField(key) for key in FORMA_AVAILE if key in names and feature.GetField(key) != 'None' and feature.GetField(key)}
 
-            asset_data['length'] = asset_data['length'] if 'length' in asset_data.keys() else 0
-            asset_data['wide'] = asset_data['wide'] if 'wide' in asset_data.keys() else 0
-
             if 'install' in asset_data and asset_data['install']:
                 asset_data['install'] = asset_data['install'].replace("/", "-")
             else:
@@ -655,6 +652,9 @@ def apiFileUpload(request):
 
                 print ("updated", asset.assetId)
             else:               # create new asset
+                asset_data['length'] = asset_data['length'] if 'length' in asset_data.keys() else 0
+                asset_data['wide'] = asset_data['wide'] if 'wide' in asset_data.keys() else 0
+                
                 if asset_id == None or asset_id == "":
                     asset_id = AssetAForm.objects.all().aggregate(Max('pk'))['pk__max']
                     asset_id = 'A-%04d' % asset_id \
