@@ -111,9 +111,14 @@ def inspectionView(request, type):
         asset = get_object_or_404(AssetBForm, assetId=assetId)
 
     created_user = CustomUser.objects.get(pk=asset.created_by)
-    updated_user = CustomUser.objects.get(pk=asset.updated_by)
-    if created_user.company_id != request.user.company_id and updated_user.company_id != request.user.company_id:
-        get_object_or_404(AssetAForm, assetId='')
+    try:
+        updated_user = CustomUser.objects.get(pk=asset.updated_by)
+        if created_user.company_id != request.user.company_id and updated_user.company_id != request.user.company_id:
+            get_object_or_404(AssetAForm, assetId='')
+    except:
+        updated_user = None
+        if created_user.company_id != request.user.company_id:
+            get_object_or_404(AssetAForm, assetId='')
 
     return render(request, 'inspection.html', {"assetType": type, "assetId": assetId})
 
@@ -654,7 +659,7 @@ def apiFileUpload(request):
             else:               # create new asset
                 asset_data['length'] = asset_data['length'] if 'length' in asset_data.keys() else 0
                 asset_data['wide'] = asset_data['wide'] if 'wide' in asset_data.keys() else 0
-                
+
                 if asset_id == None or asset_id == "":
                     asset_id = AssetAForm.objects.all().aggregate(Max('pk'))['pk__max']
                     asset_id = 'A-%04d' % asset_id \
